@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test API Tieline - Proxy CORS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white p-4 md:p-6">
+    <div class="max-w-5xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6">🔓 Test API Tieline - Version Proxy CORS</h1>
+        
+        <div class="bg-blue-900 bg-opacity-30 border border-blue-700 rounded-lg p-4 mb-4">
+            <h3 class="font-bold mb-2">ℹ️ Cette version contourne CORS</h3>
+            <p class="text-sm text-gray-300">
+                Utilisez cette page si vous avez l'erreur <strong>"Load failed"</strong> ou <strong>"CORS blocked"</strong>.
+            </p>
+        </div>
+        
+        <div class="bg-gray-800 rounded-lg p-4 md:p-6 mb-4">
+            <h2 class="text-xl font-bold mb-4">⚙️ Configuration</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                <input type="text" id="test-ip" placeholder="IP" value="82.127.52.49"
+                       class="bg-gray-700 border border-gray-600 rounded px-3 py-2">
+                <input type="number" id="test-port" placeholder="Port" value="25011"
+                       class="bg-gray-700 border border-gray-600 rounded px-3 py-2">
+                <input type="text" id="test-user" placeholder="Username" value="admin"
+                       class="bg-gray-700 border border-gray-600 rounded px-3 py-2">
+                <input type="password" id="test-pass" placeholder="Password"
+                       class="bg-gray-700 border border-gray-600 rounded px-3 py-2">
+            </div>
+            
+            <div class="mt-3">
+                <label class="block text-sm mb-2">Service Proxy CORS :</label>
+                <select id="proxy-service" class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2">
+                    <option value="https://corsproxy.io/?">corsproxy.io (Recommandé)</option>
+                    <option value="https://api.allorigins.win/raw?url=">allorigins.win</option>
+                    <option value="">Sans proxy (test direct)</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="bg-gray-800 rounded-lg p-4 md:p-6 mb-4">
+            <h2 class="text-xl font-bold mb-4">🎯 Endpoints à tester</h2>
+            
+            <div class="mb-4">
+                <h3 class="text-sm font-bold text-gray-400 mb-2">API REST</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                    <button onclick="testEndpoint('/api/v1/status')" class="bg-blue-600 hover:bg-blue-700 rounded py-2 text-sm">
+                        /api/v1/status
+                    </button>
+                    <button onclick="testEndpoint('/api/v1/connection')" class="bg-blue-600 hover:bg-blue-700 rounded py-2 text-sm">
+                        /api/v1/connection
+                    </button>
+                    <button onclick="testEndpoint('/api/v1/system/info')" class="bg-blue-600 hover:bg-blue-700 rounded py-2 text-sm">
+                        /api/v1/system/info
+                    </button>
+                    <button onclick="testEndpoint('/api/v1/audio')" class="bg-blue-600 hover:bg-blue-700 rounded py-2 text-sm">
+                        /api/v1/audio
+                    </button>
+                    <button onclick="testEndpoint('/api/v1/gpio')" class="bg-blue-600 hover:bg-blue-700 rounded py-2 text-sm">
+                        /api/v1/gpio
+                    </button>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <h3 class="text-sm font-bold text-gray-400 mb-2">CGI Scripts</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                    <button onclick="testEndpoint('/cgi-bin/status.cgi')" class="bg-purple-600 hover:bg-purple-700 rounded py-2 text-sm">
+                        /cgi-bin/status.cgi
+                    </button>
+                    <button onclick="testEndpoint('/cgi-bin/connection_info.cgi')" class="bg-purple-600 hover:bg-purple-700 rounded py-2 text-sm">
+                        /cgi-bin/connection_info.cgi
+                    </button>
+                    <button onclick="testEndpoint('/cgi-bin/gpio_status.cgi')" class="bg-purple-600 hover:bg-purple-700 rounded py-2 text-sm">
+                        /cgi-bin/gpio_status.cgi
+                    </button>
+                </div>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-bold mb-2">Endpoint personnalisé :</label>
+                <div class="flex gap-2">
+                    <input type="text" id="custom-endpoint" placeholder="/votre/endpoint"
+                           class="flex-1 bg-gray-700 border border-gray-600 rounded px-3 py-2">
+                    <button onclick="testCustomEndpoint()" class="bg-green-600 hover:bg-green-700 rounded px-6 py-2">
+                        Tester
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-gray-800 rounded-lg p-4 md:p-6 mb-4">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">📊 Résultats</h2>
+                <button onclick="copyResults()" class="bg-green-600 hover:bg-green-700 rounded px-4 py-2 text-sm">
+                    📋 Copier
+                </button>
+            </div>
+            <div id="results" class="bg-gray-900 rounded p-4 font-mono text-xs overflow-auto max-h-96">
+                <p class="text-gray-400">Aucun test effectué</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let lastResult = '';
+        
+        async function testEndpoint(endpoint) {
+            const ip = document.getElementById('test-ip').value;
+            const port = document.getElementById('test-port').value;
+            const user = document.getElementById('test-user').value;
+            const pass = document.getElementById('test-pass').value;
+            const proxy = document.getElementById('proxy-service').value;
+            
+            if (!ip) {
+                alert('⚠️ Entrez une IP');
+                return;
+            }
+            
+            const directUrl = `http://${ip}:${port}${endpoint}`;
+            const url = proxy ? `${proxy}${encodeURIComponent(directUrl)}` : directUrl;
+            
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `<p class="text-yellow-400">⏳ Test en cours: ${directUrl}</p>`;
+            
+            const startTime = Date.now();
+            
+            try {
+                const headers = {'Accept': 'application/json'};
+                
+                if (!proxy && user && pass) {
+                    headers['Authorization'] = 'Basic ' + btoa(user + ':' + pass);
+                }
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: headers
+                });
+                
+                const elapsed = Date.now() - startTime;
+                const contentType = response.headers.get('content-type');
+                let data;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    data = await response.text();
+                }
+                
+                lastResult = `✅ SUCCESS: ${endpoint}\nURL: ${directUrl}\nProxy: ${proxy ? 'Oui' : 'Non'}\nStatus: ${response.status}\nTemps: ${elapsed}ms\n\nData:\n${JSON.stringify(data, null, 2)}`;
+                
+                resultsDiv.innerHTML = `
+                    <div class="text-green-400 mb-2">✅ SUCCESS: ${endpoint}</div>
+                    <div class="text-gray-400 mb-2">URL: ${directUrl}</div>
+                    <div class="text-gray-400 mb-2">Proxy: ${proxy ? 'Oui' : 'Non'}</div>
+                    <div class="text-gray-400 mb-2">Status: ${response.status} (${elapsed}ms)</div>
+                    <div class="text-gray-400 mb-2">Content-Type: ${contentType}</div>
+                    <pre class="text-white overflow-auto">${typeof data === 'object' ? JSON.stringify(data, null, 2) : data}</pre>
+                `;
+            } catch (error) {
+                const elapsed = Date.now() - startTime;
+                lastResult = `❌ ERREUR: ${endpoint}\nURL: ${directUrl}\nProxy: ${proxy ? 'Oui' : 'Non'}\nError: ${error.message}`;
+                
+                resultsDiv.innerHTML = `
+                    <div class="text-red-400 mb-2">❌ ERREUR: ${endpoint}</div>
+                    <div class="text-gray-400 mb-2">URL: ${directUrl}</div>
+                    <div class="text-gray-400 mb-2">Proxy: ${proxy ? 'Oui' : 'Non'}</div>
+                    <div class="text-gray-400 mb-2">Temps: ${elapsed}ms</div>
+                    <div class="text-gray-400">${error.message}</div>
+                    <div class="text-yellow-400 mt-3">
+                        <strong>💡 Solutions:</strong>
+                        <ul class="list-disc list-inside mt-2 text-sm">
+                            <li>Essayez l'autre proxy dans le menu déroulant</li>
+                            <li>Vérifiez que le codec est accessible: <a href="${directUrl}" target="_blank" class="underline">Tester dans un nouvel onglet</a></li>
+                            <li>Vérifiez IP, port, username, password</li>
+                        </ul>
+                    </div>
+                `;
+            }
+        }
+        
+        function testCustomEndpoint() {
+            const endpoint = document.getElementById('custom-endpoint').value;
+            if (endpoint) {
+                testEndpoint(endpoint);
+            } else {
+                alert('⚠️ Entrez un endpoint');
+            }
+        }
+        
+        function copyResults() {
+            if (lastResult) {
+                navigator.clipboard.writeText(lastResult);
+                alert('✅ Copié !');
+            } else {
+                alert('⚠️ Aucun résultat');
+            }
+        }
+    </script>
+</body>
+</html>

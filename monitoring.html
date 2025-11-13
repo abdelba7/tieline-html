@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitoring Codec Tieline</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="tieline-api.js"></script>
+    <style>
+        body { background: #0f172a; color: #e2e8f0; }
+        .status-connected { background: #10b981; }
+        .status-disconnected { background: #ef4444; }
+        .gpio-active { background: #22c55e; }
+        .gpio-inactive { background: #64748b; }
+        .jitter-good { color: #10b981; }
+        .jitter-warning { color: #eab308; }
+        .jitter-bad { color: #ef4444; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .pulse { animation: pulse 2s infinite; }
+    </style>
+</head>
+<body class="p-4 md:p-6">
+    <div class="max-w-6xl mx-auto">
+        <header class="mb-6">
+            <h1 class="text-3xl md:text-4xl font-bold mb-2">🎙️ Monitoring Codec</h1>
+            <p class="text-gray-400">État connexion, GPIO & Jitter en temps réel</p>
+        </header>
+
+        <!-- ÉTAT CONNEXION (PRIORITAIRE) -->
+        <section class="bg-gray-800 rounded-lg p-4 md:p-6 mb-4 border-2 border-gray-700">
+            <h2 class="text-xl md:text-2xl font-bold mb-4">🔌 État Connexion</h2>
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="flex items-center space-x-4">
+                    <div id="status-indicator" class="w-12 h-12 rounded-full status-disconnected pulse"></div>
+                    <div>
+                        <div id="status-text" class="text-2xl md:text-3xl font-bold">DÉCONNECTÉ</div>
+                        <div id="codec-type" class="text-gray-400 text-sm">Type: --</div>
+                    </div>
+                </div>
+                <div class="text-center md:text-right">
+                    <div class="text-sm text-gray-400">Durée</div>
+                    <div id="connection-duration" class="text-xl md:text-2xl font-mono">00:00:00</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- JITTER (Important) -->
+        <section class="bg-gray-800 rounded-lg p-4 md:p-6 mb-4 border border-yellow-600">
+            <h2 class="text-xl md:text-2xl font-bold mb-4">⏱️ Gestion du Jitter</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-gray-900 p-4 rounded text-center">
+                    <div class="text-sm text-gray-400 mb-2">Jitter Actuel</div>
+                    <div id="jitter-current" class="text-3xl font-bold jitter-good">-- ms</div>
+                </div>
+                <div class="bg-gray-900 p-4 rounded text-center">
+                    <div class="text-sm text-gray-400 mb-2">Jitter Moyen</div>
+                    <div id="jitter-avg" class="text-2xl font-bold text-blue-400">-- ms</div>
+                </div>
+                <div class="bg-gray-900 p-4 rounded text-center">
+                    <div class="text-sm text-gray-400 mb-2">Jitter Max</div>
+                    <div id="jitter-max" class="text-2xl font-bold text-red-400">-- ms</div>
+                </div>
+            </div>
+            <div class="mt-4 text-sm text-gray-400">
+                🟢 Excellent: &lt;10ms | 🟡 Bon: 10-30ms | 🔴 Problème: &gt;30ms
+            </div>
+        </section>
+
+        <!-- ÉTAT GPIO -->
+        <section class="bg-gray-800 rounded-lg p-4 md:p-6 mb-4 border border-gray-700">
+            <h2 class="text-xl md:text-2xl font-bold mb-4">🔌 État GPIO</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div class="bg-gray-900 p-3 rounded">
+                    <div class="text-xs text-gray-400 mb-2">GPIO 1 IN</div>
+                    <div class="flex items-center space-x-2">
+                        <div id="gpio1-in" class="w-4 h-4 rounded-full gpio-inactive"></div>
+                        <span id="gpio1-in-text" class="text-sm">OFF</span>
+                    </div>
+                </div>
+                <div class="bg-gray-900 p-3 rounded">
+                    <div class="text-xs text-gray-400 mb-2">GPIO 2 IN</div>
+                    <div class="flex items-center space-x-2">
+                        <div id="gpio2-in" class="w-4 h-4 rounded-full gpio-inactive"></div>
+                        <span id="gpio2-in-text" class="text-sm">OFF</span>
+                    </div>
+                </div>
+                <div class="bg-gray-900 p-3 rounded">
+                    <div class="text-xs text-gray-400 mb-2">GPIO 1 OUT</div>
+                    <div class="flex items-center space-x-2">
+                        <div id="gpio1-out" class="w-4 h-4 rounded-full gpio-inactive"></div>
+                        <span id="gpio1-out-text" class="text-sm">OFF</span>
+                    </div>
+                </div>
+                <div class="bg-gray-900 p-3 rounded">
+                    <div class="text-xs text-gray-400 mb-2">GPIO 2 OUT</div>
+                    <div class="flex items-center space-x-2">
+                        <div id="gpio2-out" class="w-4 h-4 rounded-full gpio-inactive"></div>
+                        <span id="gpio2-out-text" class="text-sm">OFF</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- QUALITÉ RÉSEAU -->
+        <section class="bg-gray-800 rounded-lg p-4 md:p-6 mb-4 border border-gray-700">
+            <h2 class="text-xl md:text-2xl font-bold mb-4">📡 Qualité Réseau</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div class="bg-gray-900 p-3 rounded text-center">
+                    <div class="text-xs text-gray-400 mb-1">TX</div>
+                    <div id="bitrate-tx" class="text-lg md:text-xl font-bold text-green-400">--</div>
+                </div>
+                <div class="bg-gray-900 p-3 rounded text-center">
+                    <div class="text-xs text-gray-400 mb-1">RX</div>
+                    <div id="bitrate-rx" class="text-lg md:text-xl font-bold text-green-400">--</div>
+                </div>
+                <div class="bg-gray-900 p-3 rounded text-center">
+                    <div class="text-xs text-gray-400 mb-1">Perte</div>
+                    <div id="packet-loss" class="text-lg md:text-xl font-bold text-yellow-400">--</div>
+                </div>
+                <div class="bg-gray-900 p-3 rounded text-center">
+                    <div class="text-xs text-gray-400 mb-1">Qualité</div>
+                    <div id="quality" class="text-lg md:text-xl font-bold">--</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CONFIGURATION -->
+        <section class="bg-gray-800 rounded-lg p-4 md:p-6 border border-gray-700">
+            <h2 class="text-xl font-bold mb-4">⚙️ Connexion</h2>
+            <div class="flex flex-col md:flex-row gap-3">
+                <select id="machine-select" class="bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white flex-1">
+                    <option value="">Sélectionner une machine</option>
+                </select>
+                <button onclick="connectToMachine()" class="bg-blue-600 hover:bg-blue-700 rounded px-6 py-2 font-bold">
+                    🔌 Connecter
+                </button>
+                <button onclick="disconnectCodec()" class="bg-red-600 hover:bg-red-700 rounded px-6 py-2 font-bold">
+                    ⏹️ Déconnecter
+                </button>
+            </div>
+            <div id="message" class="mt-3 text-center text-sm"></div>
+        </section>
+    </div>
+
+    <script>
+        const api = new TielineAPI();
+        let updateInterval = null;
+        let jitterHistory = [];
+        
+        // Charger les machines depuis config
+        fetch('config.json')
+            .then(res => res.json())
+            .then(config => {
+                const select = document.getElementById('machine-select');
+                config.machines.forEach(machine => {
+                    const option = document.createElement('option');
+                    option.value = JSON.stringify(machine);
+                    option.textContent = machine.name + ' (' + machine.ip + ')';
+                    select.appendChild(option);
+                });
+            })
+            .catch(() => console.log('config.json non trouvé'));
+
+        async function connectToMachine() {
+            const select = document.getElementById('machine-select');
+            if (!select.value) {
+                showMessage('⚠️ Sélectionnez une machine', 'warning');
+                return;
+            }
+            
+            const machine = JSON.parse(select.value);
+            showMessage('Connexion à ' + machine.name + '...', 'info');
+            
+            const result = await api.connect(machine.ip, machine.port || 80);
+            
+            if (result.success) {
+                showMessage('✅ Connecté à ' + machine.name, 'success');
+                updateConnectionStatus(true, machine.name);
+                startMonitoring();
+            } else {
+                showMessage('❌ Erreur: ' + result.error, 'error');
+            }
+        }
+
+        function disconnectCodec() {
+            api.disconnect();
+            if (updateInterval) clearInterval(updateInterval);
+            updateConnectionStatus(false);
+            jitterHistory = [];
+            showMessage('Déconnecté', 'info');
+        }
+
+        function startMonitoring() {
+            if (updateInterval) clearInterval(updateInterval);
+            updateInterval = setInterval(updateDisplay, 2000);
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            const state = api.getStateForClockOnAir();
+            if (!state.isConnected) return;
+            
+            document.getElementById('codec-type').textContent = 'Type: ' + state.codecType;
+            document.getElementById('connection-duration').textContent = state.duration;
+            
+            // Réseau
+            const bitrates = state.network.bitrate.split('/');
+            document.getElementById('bitrate-tx').textContent = bitrates[0].trim();
+            document.getElementById('bitrate-rx').textContent = bitrates[1].trim();
+            document.getElementById('packet-loss').textContent = state.network.packetLoss;
+            document.getElementById('quality').textContent = state.network.quality.toUpperCase();
+            
+            // JITTER - avec historique
+            const jitterValue = parseFloat(state.network.jitter);
+            jitterHistory.push(jitterValue);
+            if (jitterHistory.length > 30) jitterHistory.shift();
+            
+            const avgJitter = jitterHistory.reduce((a,b) => a+b, 0) / jitterHistory.length;
+            const maxJitter = Math.max(...jitterHistory);
+            
+            const jitterEl = document.getElementById('jitter-current');
+            jitterEl.textContent = jitterValue.toFixed(1) + ' ms';
+            
+            // Couleur selon qualité
+            jitterEl.className = jitterValue < 10 ? 'text-3xl font-bold jitter-good' :
+                                 jitterValue < 30 ? 'text-3xl font-bold jitter-warning' :
+                                 'text-3xl font-bold jitter-bad';
+            
+            document.getElementById('jitter-avg').textContent = avgJitter.toFixed(1) + ' ms';
+            document.getElementById('jitter-max').textContent = maxJitter.toFixed(1) + ' ms';
+            
+            // GPIO simulation
+            simulateGPIO();
+        }
+
+        function updateConnectionStatus(connected, name = '') {
+            const indicator = document.getElementById('status-indicator');
+            const text = document.getElementById('status-text');
+            
+            if (connected) {
+                indicator.className = 'w-12 h-12 rounded-full status-connected pulse';
+                text.textContent = 'CONNECTÉ' + (name ? ' - ' + name : '');
+                text.className = 'text-2xl md:text-3xl font-bold text-green-400';
+            } else {
+                indicator.className = 'w-12 h-12 rounded-full status-disconnected pulse';
+                text.textContent = 'DÉCONNECTÉ';
+                text.className = 'text-2xl md:text-3xl font-bold text-red-400';
+            }
+        }
+
+        function simulateGPIO() {
+            ['gpio1-in', 'gpio2-in', 'gpio1-out', 'gpio2-out'].forEach(id => {
+                const active = Math.random() > 0.7;
+                const el = document.getElementById(id);
+                const txt = document.getElementById(id + '-text');
+                
+                el.className = 'w-4 h-4 rounded-full ' + (active ? 'gpio-active' : 'gpio-inactive');
+                txt.textContent = active ? 'ON' : 'OFF';
+            });
+        }
+
+        function showMessage(msg, type) {
+            const el = document.getElementById('message');
+            el.textContent = msg;
+            const colors = {
+                success: 'text-green-400',
+                error: 'text-red-400',
+                info: 'text-blue-400',
+                warning: 'text-yellow-400'
+            };
+            el.className = 'mt-3 text-center text-sm ' + (colors[type] || colors.info);
+        }
+    </script>
+</body>
+</html>

@@ -3,64 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test API Tieline</title>
+    <title>Test API Tieline - Amélioré</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-900 text-white p-6">
-    <div class="max-w-4xl mx-auto">
-        <h1 class="text-3xl font-bold mb-6">🔍 Test API Tieline</h1>
+<body class="bg-gray-900 text-white p-4 md:p-6">
+    <div class="max-w-5xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6">🔍 Test API Tieline - Version Améliorée</h1>
         
-        <div class="bg-gray-800 rounded-lg p-6 mb-6">
-            <h2 class="text-xl font-bold mb-4">Configuration</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <input type="text" id="test-ip" placeholder="IP Codec" value="192.168.1.100"
+        <!-- Sélection rapide depuis config.json -->
+        <div class="bg-gray-800 rounded-lg p-4 md:p-6 mb-4">
+            <h2 class="text-xl font-bold mb-4">🚀 Sélection Rapide</h2>
+            <div class="flex gap-3">
+                <select id="machine-select" class="flex-1 bg-gray-700 border border-gray-600 rounded px-3 py-2">
+                    <option value="">-- Sélectionner une machine depuis config.json --</option>
+                </select>
+                <button onclick="loadMachine()" class="bg-blue-600 hover:bg-blue-700 rounded px-6 py-2 font-bold">
+                    Charger
+                </button>
+            </div>
+        </div>
+        
+        <!-- Configuration manuelle -->
+        <div class="bg-gray-800 rounded-lg p-4 md:p-6 mb-4">
+            <h2 class="text-xl font-bold mb-4">⚙️ Configuration</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                <input type="text" id="test-ip" placeholder="IP ou Domaine" value="192.168.1.100"
+                       class="bg-gray-700 border border-gray-600 rounded px-3 py-2">
+                <input type="number" id="test-port" placeholder="Port" value="80"
                        class="bg-gray-700 border border-gray-600 rounded px-3 py-2">
                 <input type="text" id="test-user" placeholder="Username" value="admin"
                        class="bg-gray-700 border border-gray-600 rounded px-3 py-2">
                 <input type="password" id="test-pass" placeholder="Password"
                        class="bg-gray-700 border border-gray-600 rounded px-3 py-2">
             </div>
-        </div>
-        
-        <div class="bg-gray-800 rounded-lg p-6 mb-6">
-            <h2 class="text-xl font-bold mb-4">Endpoints à tester</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <button onclick="testEndpoint('/api/v1/status')" 
-                        class="bg-blue-600 hover:bg-blue-700 rounded py-2 text-sm">
-                    Test: /api/v1/status
+            <div class="mt-3 flex gap-2">
+                <button onclick="saveConfig()" class="bg-green-600 hover:bg-green-700 rounded px-4 py-2 text-sm">
+                    💾 Sauvegarder
                 </button>
-                <button onclick="testEndpoint('/api/v1/connection')" 
-                        class="bg-blue-600 hover:bg-blue-700 rounded py-2 text-sm">
-                    Test: /api/v1/connection
-                </button>
-                <button onclick="testEndpoint('/api/v1/system/info')" 
-                        class="bg-blue-600 hover:bg-blue-700 rounded py-2 text-sm">
-                    Test: /api/v1/system/info
-                </button>
-                <button onclick="testEndpoint('/api/v1/audio')" 
-                        class="bg-blue-600 hover:bg-blue-700 rounded py-2 text-sm">
-                    Test: /api/v1/audio
-                </button>
-                <button onclick="testEndpoint('/api/v1/gpio')" 
-                        class="bg-blue-600 hover:bg-blue-700 rounded py-2 text-sm">
-                    Test: /api/v1/gpio
-                </button>
-                <button onclick="testEndpoint('/cgi-bin/status.cgi')" 
-                        class="bg-purple-600 hover:bg-purple-700 rounded py-2 text-sm">
-                    Test: /cgi-bin/status.cgi
-                </button>
-                <button onclick="testEndpoint('/cgi-bin/connection_info.cgi')" 
-                        class="bg-purple-600 hover:bg-purple-700 rounded py-2 text-sm">
-                    Test: /cgi-bin/connection_info.cgi
-                </button>
-                <button onclick="testEndpoint('/cgi-bin/gpio_status.cgi')" 
-                        class="bg-purple-600 hover:bg-purple-700 rounded py-2 text-sm">
-                    Test: /cgi-bin/gpio_status.cgi
+                <button onclick="loadConfig()" class="bg-purple-600 hover:bg-purple-700 rounded px-4 py-2 text-sm">
+                    📂 Charger sauvegarde
                 </button>
             </div>
+        </div>
+        
+        <!-- Endpoints à tester -->
+        <div class="bg-gray-800 rounded-lg p-4 md:p-6 mb-4">
+            <h2 class="text-xl font-bold mb-4">🎯 Endpoints à tester</h2>
             
-            <div class="mt-4">
-                <label class="block text-sm mb-2">Endpoint personnalisé :</label>
+            <div class="mb-4">
+                <h3 class="text-sm font-bold text-gray-400 mb-2">API REST (v1)</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                    <button onclick="testEndpoint('/api/v1/status')" 
+                            class="bg-blue-600 hover:bg-blue-700 rounded py-2 text-sm">
+                        /api/v1/status
+                    </button>
+                    <button onclick="testEndpoint('/api/v1/connection')" 
+                            class="bg-blue-600 hover:bg-blue-700 rounded py-2 text-sm">
+                        /api/v1/connection
+                    </button>
+                    <button onclick="testEndpoint('/api/v1/system/info')" 
+                            class="bg-blue-600 hover:bg-blue-700 rounded py-2 text-sm">
+                        /api/v1/system/info
+                    </button>
+                    <button onclick="testEndpoint('/api/v1/audio')" 
+                            class="bg-blue-600 hover:bg-blue-700 rounded py-2 text-sm">
+                        /api/v1/audio
+                    </button>
+                    <button onclick="testEndpoint('/api/v1/gpio')" 
+                            class="bg-blue-600 hover:bg-blue-700 rounded py-2 text-sm">
+                        /api/v1/gpio
+                    </button>
+                    <button onclick="testEndpoint('/api/v1/profiles')" 
+                            class="bg-blue-600 hover:bg-blue-700 rounded py-2 text-sm">
+                        /api/v1/profiles
+                    </button>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <h3 class="text-sm font-bold text-gray-400 mb-2">CGI Scripts (Legacy)</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                    <button onclick="testEndpoint('/cgi-bin/status.cgi')" 
+                            class="bg-purple-600 hover:bg-purple-700 rounded py-2 text-sm">
+                        /cgi-bin/status.cgi
+                    </button>
+                    <button onclick="testEndpoint('/cgi-bin/connection_info.cgi')" 
+                            class="bg-purple-600 hover:bg-purple-700 rounded py-2 text-sm">
+                        /cgi-bin/connection_info.cgi
+                    </button>
+                    <button onclick="testEndpoint('/cgi-bin/gpio_status.cgi')" 
+                            class="bg-purple-600 hover:bg-purple-700 rounded py-2 text-sm">
+                        /cgi-bin/gpio_status.cgi
+                    </button>
+                    <button onclick="testEndpoint('/cgi-bin/audio_levels.cgi')" 
+                            class="bg-purple-600 hover:bg-purple-700 rounded py-2 text-sm">
+                        /cgi-bin/audio_levels.cgi
+                    </button>
+                </div>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-bold mb-2">Endpoint personnalisé :</label>
                 <div class="flex gap-2">
                     <input type="text" id="custom-endpoint" placeholder="/votre/endpoint"
                            class="flex-1 bg-gray-700 border border-gray-600 rounded px-3 py-2">
@@ -72,24 +115,115 @@
             </div>
         </div>
         
-        <div class="bg-gray-800 rounded-lg p-6">
-            <h2 class="text-xl font-bold mb-4">Résultats</h2>
+        <!-- Résultats -->
+        <div class="bg-gray-800 rounded-lg p-4 md:p-6 mb-4">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">📊 Résultats</h2>
+                <div class="flex gap-2">
+                    <button onclick="copyResults()" class="bg-green-600 hover:bg-green-700 rounded px-4 py-2 text-sm">
+                        📋 Copier
+                    </button>
+                    <button onclick="exportResults()" class="bg-blue-600 hover:bg-blue-700 rounded px-4 py-2 text-sm">
+                        💾 Exporter
+                    </button>
+                    <button onclick="clearResults()" class="bg-red-600 hover:bg-red-700 rounded px-4 py-2 text-sm">
+                        🗑️ Effacer
+                    </button>
+                </div>
+            </div>
             <div id="results" class="bg-gray-900 rounded p-4 font-mono text-xs overflow-auto max-h-96">
                 <p class="text-gray-400">Aucun test effectué</p>
             </div>
         </div>
+        
+        <!-- Instructions -->
+        <div class="bg-yellow-900 bg-opacity-30 border border-yellow-700 rounded-lg p-4">
+            <h3 class="font-bold mb-2">💡 Instructions</h3>
+            <ol class="text-sm text-gray-300 space-y-1">
+                <li>1. <strong>Sélection rapide</strong> : Chargez une machine depuis config.json</li>
+                <li>2. <strong>Configuration manuelle</strong> : Entrez IP, Port, Username, Password</li>
+                <li>3. <strong>Port NAT</strong> : Utilisez le port de redirection NAT (ex: 8001, 9000)</li>
+                <li>4. <strong>Testez les endpoints</strong> : Cliquez sur les boutons bleus/violets</li>
+                <li>5. <strong>Résultats</strong> : Notez les endpoints qui retournent ✅ SUCCESS</li>
+                <li>6. <strong>Export</strong> : Copiez ou exportez les résultats</li>
+            </ol>
+        </div>
     </div>
 
     <script>
+        let allResults = [];
+        
+        // Charger les machines depuis config.json
+        fetch('config.json')
+            .then(res => res.json())
+            .then(config => {
+                const select = document.getElementById('machine-select');
+                config.machines.forEach(machine => {
+                    const option = document.createElement('option');
+                    option.value = JSON.stringify(machine);
+                    option.textContent = `${machine.name} (${machine.ip}:${machine.port || 80})`;
+                    select.appendChild(option);
+                });
+            })
+            .catch(() => console.log('config.json non trouvé'));
+        
+        function loadMachine() {
+            const select = document.getElementById('machine-select');
+            if (!select.value) {
+                alert('⚠️ Veuillez sélectionner une machine');
+                return;
+            }
+            
+            const machine = JSON.parse(select.value);
+            document.getElementById('test-ip').value = machine.ip;
+            document.getElementById('test-port').value = machine.port || 80;
+            document.getElementById('test-user').value = machine.username || 'admin';
+            document.getElementById('test-pass').value = machine.password || '';
+            
+            alert('✅ Machine chargée : ' + machine.name);
+        }
+        
+        function saveConfig() {
+            const config = {
+                ip: document.getElementById('test-ip').value,
+                port: document.getElementById('test-port').value,
+                user: document.getElementById('test-user').value,
+                pass: document.getElementById('test-pass').value
+            };
+            localStorage.setItem('tieline-test-config', JSON.stringify(config));
+            alert('✅ Configuration sauvegardée !');
+        }
+        
+        function loadConfig() {
+            const config = JSON.parse(localStorage.getItem('tieline-test-config'));
+            if (config) {
+                document.getElementById('test-ip').value = config.ip;
+                document.getElementById('test-port').value = config.port;
+                document.getElementById('test-user').value = config.user;
+                document.getElementById('test-pass').value = config.pass;
+                alert('✅ Configuration chargée !');
+            } else {
+                alert('⚠️ Aucune configuration sauvegardée');
+            }
+        }
+        
         async function testEndpoint(endpoint) {
             const ip = document.getElementById('test-ip').value;
+            const port = document.getElementById('test-port').value;
             const user = document.getElementById('test-user').value;
             const pass = document.getElementById('test-pass').value;
             
-            const url = `http://${ip}${endpoint}`;
+            if (!ip) {
+                alert('⚠️ Veuillez entrer une adresse IP');
+                return;
+            }
+            
+            const url = `http://${ip}:${port}${endpoint}`;
             const resultsDiv = document.getElementById('results');
             
             resultsDiv.innerHTML = `<p class="text-yellow-400">⏳ Test en cours: ${url}</p>`;
+            
+            const startTime = Date.now();
             
             try {
                 const response = await fetch(url, {
@@ -97,9 +231,11 @@
                     headers: {
                         'Authorization': 'Basic ' + btoa(user + ':' + pass),
                         'Accept': 'application/json'
-                    }
+                    },
+                    mode: 'cors'
                 });
                 
+                const elapsed = Date.now() - startTime;
                 const contentType = response.headers.get('content-type');
                 let data;
                 
@@ -109,16 +245,56 @@
                     data = await response.text();
                 }
                 
+                const result = {
+                    endpoint: endpoint,
+                    url: url,
+                    status: response.status,
+                    statusText: response.statusText,
+                    contentType: contentType,
+                    elapsed: elapsed,
+                    data: data,
+                    success: true,
+                    timestamp: new Date().toISOString()
+                };
+                
+                allResults.push(result);
+                
                 resultsDiv.innerHTML = `
                     <div class="text-green-400 mb-2">✅ SUCCESS: ${endpoint}</div>
-                    <div class="text-gray-400 mb-2">Status: ${response.status} ${response.statusText}</div>
+                    <div class="text-gray-400 mb-2">URL: ${url}</div>
+                    <div class="text-gray-400 mb-2">Status: ${response.status} ${response.statusText} (${elapsed}ms)</div>
                     <div class="text-gray-400 mb-2">Content-Type: ${contentType}</div>
-                    <pre class="text-white">${JSON.stringify(data, null, 2)}</pre>
+                    <pre class="text-white overflow-auto">${typeof data === 'object' ? JSON.stringify(data, null, 2) : data}</pre>
                 `;
             } catch (error) {
+                const elapsed = Date.now() - startTime;
+                
+                const result = {
+                    endpoint: endpoint,
+                    url: url,
+                    error: error.message,
+                    elapsed: elapsed,
+                    success: false,
+                    timestamp: new Date().toISOString()
+                };
+                
+                allResults.push(result);
+                
                 resultsDiv.innerHTML = `
                     <div class="text-red-400 mb-2">❌ ERREUR: ${endpoint}</div>
+                    <div class="text-gray-400 mb-2">URL: ${url}</div>
+                    <div class="text-gray-400 mb-2">Temps écoulé: ${elapsed}ms</div>
                     <div class="text-gray-400">${error.message}</div>
+                    <div class="text-yellow-400 mt-3">
+                        <strong>⚠️ Problèmes possibles:</strong>
+                        <ul class="list-disc list-inside mt-2 text-sm">
+                            <li>Le codec n'est pas accessible sur ${ip}:${port}</li>
+                            <li>CORS bloqué (testez depuis le même réseau que le codec)</li>
+                            <li>Endpoint incorrect pour ce modèle de codec</li>
+                            <li>Authentification requise ou incorrecte</li>
+                            <li>Port NAT incorrect ou non configuré</li>
+                        </ul>
+                    </div>
                 `;
             }
         }
@@ -127,6 +303,42 @@
             const endpoint = document.getElementById('custom-endpoint').value;
             if (endpoint) {
                 testEndpoint(endpoint);
+            } else {
+                alert('⚠️ Veuillez entrer un endpoint');
+            }
+        }
+        
+        function copyResults() {
+            if (allResults.length === 0) {
+                alert('⚠️ Aucun résultat à copier');
+                return;
+            }
+            
+            const text = JSON.stringify(allResults, null, 2);
+            navigator.clipboard.writeText(text);
+            alert('✅ Résultats copiés dans le presse-papiers !');
+        }
+        
+        function exportResults() {
+            if (allResults.length === 0) {
+                alert('⚠️ Aucun résultat à exporter');
+                return;
+            }
+            
+            const blob = new Blob([JSON.stringify(allResults, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `tieline-api-test-${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            alert('✅ Résultats exportés !');
+        }
+        
+        function clearResults() {
+            if (confirm('Effacer tous les résultats ?')) {
+                allResults = [];
+                document.getElementById('results').innerHTML = '<p class="text-gray-400">Aucun test effectué</p>';
             }
         }
     </script>

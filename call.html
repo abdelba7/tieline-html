@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="tieline-api.js"></script>
+    <title>Tieline Dialer</title>
+    <style>
+        body { 
+            background-color: #f3f4f6;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center h-screen">
+    <div class="bg-white shadow-lg rounded-lg p-4 w-full max-w-sm">
+        <h1 class="text-2xl font-bold text-center mb-4">Tieline Dialer</h1>
+        <div id="contact-list" class="mb-4">
+            <button class="w-full bg-blue-500 text-white font-bold py-2 rounded mb-2" onclick="makeCall('Contact1')">Contact 1</button>
+            <button class="w-full bg-blue-500 text-white font-bold py-2 rounded mb-2" onclick="makeCall('Contact2')">Contact 2</button>
+            <button class="w-full bg-blue-500 text-white font-bold py-2 rounded mb-2" onclick="makeCall('Contact3')">Contact 3</button>
+            <!-- Add more contacts as needed -->
+        </div>
+        <div class="flex justify-between mb-4">
+            <span id="duration-display" class="text-gray-700">0:00</span>
+            <span id="codec-status" class="text-gray-700">Codec: Disconnected</span>
+        </div>
+        <div class="flex justify-between">
+            <button id="call-button" class="w-full bg-green-500 text-white font-bold py-2 rounded mr-2" onclick="startCall()">Call</button>
+            <button id="hangup-button" class="w-full bg-red-500 text-white font-bold py-2 rounded ml-2" onclick="hangupCall()">Hang Up</button>
+        </div>
+    </div>
+    <script>
+        function makeCall(contact) {
+            // Logic to initiate call with the contact
+            console.log('Calling ' + contact);
+            document.getElementById('codec-status').innerText = 'Codec: Connected';
+        }
+        function startCall() {
+            // Logic to start an ongoing call
+            console.log('Call started');
+        }
+        function hangupCall() {
+            // Logic to end the call
+            console.log('Call ended');
+            document.getElementById('codec-status').innerText = 'Codec: Disconnected';
+        }
+    </script>
+</body>
+</html>

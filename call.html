@@ -1,50 +1,578 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <script src="tieline-api.js"></script>
-    <title>Tieline Dialer</title>
+    <title>Tieline Call Manager</title>
     <style>
         body { 
             background-color: #f3f4f6;
         }
+        .device-card {
+            transition: all 0.3s ease;
+        }
+        .device-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .selected {
+            border: 2px solid #3b82f6;
+            background-color: #eff6ff;
+        }
     </style>
 </head>
-<body class="flex items-center justify-center h-screen">
-    <div class="bg-white shadow-lg rounded-lg p-4 w-full max-w-sm">
-        <h1 class="text-2xl font-bold text-center mb-4">Tieline Dialer</h1>
-        <div id="contact-list" class="mb-4">
-            <button class="w-full bg-blue-500 text-white font-bold py-2 rounded mb-2" onclick="makeCall('Contact1')">Contact 1</button>
-            <button class="w-full bg-blue-500 text-white font-bold py-2 rounded mb-2" onclick="makeCall('Contact2')">Contact 2</button>
-            <button class="w-full bg-blue-500 text-white font-bold py-2 rounded mb-2" onclick="makeCall('Contact3')">Contact 3</button>
-            <!-- Add more contacts as needed -->
+<body class="p-4">
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-3xl font-bold text-center mb-6">📞 Tieline Call Manager</h1>
+        
+        <!-- Section 1: Sélection Source et Destination -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            
+            <!-- SOURCE -->
+            <div class="bg-white shadow-lg rounded-lg p-6">
+                <h2 class="text-xl font-bold mb-4 text-green-700">🎤 SOURCE (Départ)</h2>
+                
+                <!-- Merlin -->
+                <div class="mb-4">
+                    <h3 class="font-semibold mb-2">Merlin (6 lignes)</h3>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button onclick="selectSource('merlin', 1)" class="device-card bg-blue-100 hover:bg-blue-200 py-2 px-3 rounded" data-source="merlin-1">
+                            Ligne 1
+                        </button>
+                        <button onclick="selectSource('merlin', 2)" class="device-card bg-blue-100 hover:bg-blue-200 py-2 px-3 rounded" data-source="merlin-2">
+                            Ligne 2
+                        </button>
+                        <button onclick="selectSource('merlin', 3)" class="device-card bg-blue-100 hover:bg-blue-200 py-2 px-3 rounded" data-source="merlin-3">
+                            Ligne 3
+                        </button>
+                        <button onclick="selectSource('merlin', 4)" class="device-card bg-blue-100 hover:bg-blue-200 py-2 px-3 rounded" data-source="merlin-4">
+                            Ligne 4
+                        </button>
+                        <button onclick="selectSource('merlin', 5)" class="device-card bg-blue-100 hover:bg-blue-200 py-2 px-3 rounded" data-source="merlin-5">
+                            Ligne 5
+                        </button>
+                        <button onclick="selectSource('merlin', 6)" class="device-card bg-blue-100 hover:bg-blue-200 py-2 px-3 rounded" data-source="merlin-6">
+                            Ligne 6
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Bridge-IT Studio A -->
+                <div class="mb-4">
+                    <h3 class="font-semibold mb-2">Bridge-IT Studio A</h3>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="selectSource('bridgeit-a', 'stereo')" class="device-card bg-purple-100 hover:bg-purple-200 py-2 px-3 rounded" data-source="bridgeit-a-stereo">
+                            Stéréo
+                        </button>
+                        <button onclick="selectSource('bridgeit-a', 'mono')" class="device-card bg-purple-100 hover:bg-purple-200 py-2 px-3 rounded" data-source="bridgeit-a-mono">
+                            2× Mono
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Bridge-IT Studio B -->
+                <div class="mb-4">
+                    <h3 class="font-semibold mb-2">Bridge-IT Studio B</h3>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="selectSource('bridgeit-b', 'stereo')" class="device-card bg-purple-100 hover:bg-purple-200 py-2 px-3 rounded" data-source="bridgeit-b-stereo">
+                            Stéréo
+                        </button>
+                        <button onclick="selectSource('bridgeit-b', 'mono')" class="device-card bg-purple-100 hover:bg-purple-200 py-2 px-3 rounded" data-source="bridgeit-b-mono">
+                            2× Mono
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- VIA Extérieur -->
+                <div class="mb-4">
+                    <h3 class="font-semibold mb-2">VIA Extérieur</h3>
+                    <button onclick="selectSource('via', 1)" class="device-card bg-orange-100 hover:bg-orange-200 py-2 px-4 rounded w-full" data-source="via-1">
+                        VIA Ligne 1
+                    </button>
+                </div>
+                
+                <div class="mt-4 p-3 bg-green-50 rounded">
+                    <p class="text-sm font-semibold">Sélectionné:</p>
+                    <p id="source-selected" class="text-gray-600">Aucun</p>
+                </div>
+            </div>
+            
+            <!-- DESTINATION -->
+            <div class="bg-white shadow-lg rounded-lg p-6">
+                <h2 class="text-xl font-bold mb-4 text-blue-700">🎧 DESTINATION (Arrivée)</h2>
+                
+                <!-- Merlin -->
+                <div class="mb-4">
+                    <h3 class="font-semibold mb-2">Merlin (6 lignes)</h3>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button onclick="selectDestination('merlin', 1)" class="device-card bg-blue-100 hover:bg-blue-200 py-2 px-3 rounded" data-dest="merlin-1">
+                            Ligne 1
+                        </button>
+                        <button onclick="selectDestination('merlin', 2)" class="device-card bg-blue-100 hover:bg-blue-200 py-2 px-3 rounded" data-dest="merlin-2">
+                            Ligne 2
+                        </button>
+                        <button onclick="selectDestination('merlin', 3)" class="device-card bg-blue-100 hover:bg-blue-200 py-2 px-3 rounded" data-dest="merlin-3">
+                            Ligne 3
+                        </button>
+                        <button onclick="selectDestination('merlin', 4)" class="device-card bg-blue-100 hover:bg-blue-200 py-2 px-3 rounded" data-dest="merlin-4">
+                            Ligne 4
+                        </button>
+                        <button onclick="selectDestination('merlin', 5)" class="device-card bg-blue-100 hover:bg-blue-200 py-2 px-3 rounded" data-dest="merlin-5">
+                            Ligne 5
+                        </button>
+                        <button onclick="selectDestination('merlin', 6)" class="device-card bg-blue-100 hover:bg-blue-200 py-2 px-3 rounded" data-dest="merlin-6">
+                            Ligne 6
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Bridge-IT Studio A -->
+                <div class="mb-4">
+                    <h3 class="font-semibold mb-2">Bridge-IT Studio A</h3>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="selectDestination('bridgeit-a', 'stereo')" class="device-card bg-purple-100 hover:bg-purple-200 py-2 px-3 rounded" data-dest="bridgeit-a-stereo">
+                            Stéréo
+                        </button>
+                        <button onclick="selectDestination('bridgeit-a', 'mono')" class="device-card bg-purple-100 hover:bg-purple-200 py-2 px-3 rounded" data-dest="bridgeit-a-mono">
+                            2× Mono
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Bridge-IT Studio B -->
+                <div class="mb-4">
+                    <h3 class="font-semibold mb-2">Bridge-IT Studio B</h3>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="selectDestination('bridgeit-b', 'stereo')" class="device-card bg-purple-100 hover:bg-purple-200 py-2 px-3 rounded" data-dest="bridgeit-b-stereo">
+                            Stéréo
+                        </button>
+                        <button onclick="selectDestination('bridgeit-b', 'mono')" class="device-card bg-purple-100 hover:bg-purple-200 py-2 px-3 rounded" data-dest="bridgeit-b-mono">
+                            2× Mono
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- VIA Extérieur -->
+                <div class="mb-4">
+                    <h3 class="font-semibold mb-2">VIA Extérieur</h3>
+                    <button onclick="selectDestination('via', 1)" class="device-card bg-orange-100 hover:bg-orange-200 py-2 px-4 rounded w-full" data-dest="via-1">
+                        VIA Ligne 1
+                    </button>
+                </div>
+                
+                <div class="mt-4 p-3 bg-blue-50 rounded">
+                    <p class="text-sm font-semibold">Sélectionné:</p>
+                    <p id="dest-selected" class="text-gray-600">Aucun</p>
+                </div>
+            </div>
         </div>
-        <div class="flex justify-between mb-4">
-            <span id="duration-display" class="text-gray-700">0:00</span>
-            <span id="codec-status" class="text-gray-700">Codec: Disconnected</span>
+        
+        <!-- Section 2: Configuration de l'appel -->
+        <div class="bg-white shadow-lg rounded-lg p-6 mb-6">
+            <h2 class="text-xl font-bold mb-4">⚙️ Configuration de l'appel</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                
+                <!-- Type de connexion -->
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Type de connexion</label>
+                    <select id="connection-type" class="w-full border border-gray-300 rounded p-2">
+                        <option value="ip">IP (Internet)</option>
+                        <option value="isdn">RNIS (ISDN)</option>
+                    </select>
+                </div>
+                
+                <!-- Profil Audio -->
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Profil Audio</label>
+                    <select id="audio-profile" class="w-full border border-gray-300 rounded p-2">
+                        <option value="">-- Sélectionner --</option>
+                        <option value="music-high">Music High Quality</option>
+                        <option value="music-standard">Music Standard</option>
+                        <option value="voice-high">Voice High Quality</option>
+                        <option value="voice-standard">Voice Standard</option>
+                        <option value="custom">Personnalisé</option>
+                    </select>
+                </div>
+                
+                <!-- Codec Audio -->
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Format Audio</label>
+                    <select id="audio-codec" class="w-full border border-gray-300 rounded p-2">
+                        <option value="">-- Sélectionner --</option>
+                        <option value="musicam">Musicam</option>
+                        <option value="mpeg">MPEG Layer 2</option>
+                        <option value="aptx">aptX Enhanced</option>
+                        <option value="opus">Opus</option>
+                        <option value="aac">AAC-LD</option>
+                        <option value="g722">G.722</option>
+                    </select>
+                </div>
+                
+                <!-- SmartStream -->
+                <div>
+                    <label class="block text-sm font-semibold mb-2">SmartStream</label>
+                    <select id="smartstream" class="w-full border border-gray-300 rounded p-2">
+                        <option value="off">Désactivé</option>
+                        <option value="on">Activé</option>
+                        <option value="auto">Automatique</option>
+                    </select>
+                </div>
+                
+                <!-- Qualité / Bitrate -->
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Qualité (kbps)</label>
+                    <select id="bitrate" class="w-full border border-gray-300 rounded p-2">
+                        <option value="64">64 kbps</option>
+                        <option value="96">96 kbps</option>
+                        <option value="128" selected>128 kbps</option>
+                        <option value="192">192 kbps</option>
+                        <option value="256">256 kbps</option>
+                        <option value="320">320 kbps</option>
+                    </select>
+                </div>
+                
+                <!-- Mode Stéréo/Mono -->
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Mode Audio</label>
+                    <select id="audio-mode" class="w-full border border-gray-300 rounded p-2">
+                        <option value="stereo">Stéréo</option>
+                        <option value="mono">Mono</option>
+                        <option value="dual">Dual Mono</option>
+                    </select>
+                </div>
+            </div>
         </div>
-        <div class="flex justify-between">
-            <button id="call-button" class="w-full bg-green-500 text-white font-bold py-2 rounded mr-2" onclick="startCall()">Call</button>
-            <button id="hangup-button" class="w-full bg-red-500 text-white font-bold py-2 rounded ml-2" onclick="hangupCall()">Hang Up</button>
+        
+        <!-- Section 3: Phonebook et Numérotation -->
+        <div class="bg-white shadow-lg rounded-lg p-6 mb-6">
+            <h2 class="text-xl font-bold mb-4">📖 Phonebook & Numérotation</h2>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                
+                <!-- Phonebook -->
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Contacts enregistrés</label>
+                    <select id="phonebook" class="w-full border border-gray-300 rounded p-2 mb-2" onchange="loadContact()">
+                        <option value="">-- Sélectionner un contact --</option>
+                        <option value="studio1">Studio Principal</option>
+                        <option value="studio2">Studio Secondaire</option>
+                        <option value="regie">Régie Technique</option>
+                        <option value="mobile1">Reporter Mobile 1</option>
+                        <option value="mobile2">Reporter Mobile 2</option>
+                        <option value="extern1">Extérieur Paris</option>
+                        <option value="extern2">Extérieur Lyon</option>
+                    </select>
+                    <button onclick="openPhonebookManager()" class="w-full bg-gray-500 hover:bg-gray-600 text-white py-2 rounded text-sm">
+                        ✏️ Gérer le Phonebook
+                    </button>
+                </div>
+                
+                <!-- Numérotation manuelle -->
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Numérotation manuelle</label>
+                    <input type="text" id="manual-number" placeholder="IP ou numéro RNIS" class="w-full border border-gray-300 rounded p-2 mb-2">
+                    <p class="text-xs text-gray-500 mb-2">Ex: 192.168.1.100 ou +33123456789</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Section 4: Actions et Statut -->
+        <div class="bg-white shadow-lg rounded-lg p-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- Boutons d'action -->
+                <div class="lg:col-span-2">
+                    <h2 class="text-xl font-bold mb-4">🎬 Actions</h2>
+                    <div class="grid grid-cols-2 gap-4">
+                        <button id="call-button" onclick="initiateCall()" class="bg-green-500 hover:bg-green-600 text-white font-bold py-4 rounded-lg text-lg">
+                            📞 Appeler
+                        </button>
+                        <button id="hangup-button" onclick="hangupCall()" class="bg-red-500 hover:bg-red-600 text-white font-bold py-4 rounded-lg text-lg" disabled>
+                            ❌ Raccrocher
+                        </button>
+                        <button onclick="clearSelection()" class="bg-gray-400 hover:bg-gray-500 text-white font-bold py-3 rounded-lg">
+                            🔄 Réinitialiser
+                        </button>
+                        <button onclick="saveConfig()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-lg">
+                            💾 Sauvegarder Config
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Statut de l'appel -->
+                <div>
+                    <h2 class="text-xl font-bold mb-4">📊 Statut</h2>
+                    <div class="bg-gray-100 p-4 rounded-lg">
+                        <p class="text-sm mb-2"><strong>État:</strong> <span id="call-status" class="text-gray-600">Inactif</span></p>
+                        <p class="text-sm mb-2"><strong>Durée:</strong> <span id="call-duration">00:00</span></p>
+                        <p class="text-sm mb-2"><strong>Qualité:</strong> <span id="call-quality">-</span></p>
+                        <div class="mt-3">
+                            <div class="flex items-center justify-between text-xs mb-1">
+                                <span>Buffer:</span>
+                                <span id="buffer-level">0%</span>
+                            </div>
+                            <div class="w-full bg-gray-300 rounded h-2">
+                                <div id="buffer-bar" class="bg-green-500 h-2 rounded" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Log d'activité -->
+            <div class="mt-6">
+                <h3 class="font-semibold mb-2">📝 Log d'activité</h3>
+                <div id="activity-log" class="bg-gray-50 p-3 rounded max-h-32 overflow-y-auto text-sm font-mono">
+                    <p class="text-gray-500">En attente d'action...</p>
+                </div>
+            </div>
         </div>
     </div>
+
     <script>
-        function makeCall(contact) {
-            // Logic to initiate call with the contact
-            console.log('Calling ' + contact);
-            document.getElementById('codec-status').innerText = 'Codec: Connected';
+        let selectedSource = null;
+        let selectedDestination = null;
+        let callActive = false;
+        let callTimer = null;
+        let callStartTime = null;
+        
+        // Sélection de la source
+        function selectSource(device, line) {
+            // Retirer la sélection précédente
+            document.querySelectorAll('[data-source]').forEach(el => el.classList.remove('selected'));
+            
+            // Ajouter la sélection
+            const selector = `[data-source="${device}-${line}"]`;
+            document.querySelector(selector).classList.add('selected');
+            
+            selectedSource = { device, line };
+            document.getElementById('source-selected').textContent = getDeviceName(device, line);
+            addLog(`Source sélectionnée: ${getDeviceName(device, line)}`);
         }
-        function startCall() {
-            // Logic to start an ongoing call
-            console.log('Call started');
+        
+        // Sélection de la destination
+        function selectDestination(device, line) {
+            // Retirer la sélection précédente
+            document.querySelectorAll('[data-dest]').forEach(el => el.classList.remove('selected'));
+            
+            // Ajouter la sélection
+            const selector = `[data-dest="${device}-${line}"]`;
+            document.querySelector(selector).classList.add('selected');
+            
+            selectedDestination = { device, line };
+            document.getElementById('dest-selected').textContent = getDeviceName(device, line);
+            addLog(`Destination sélectionnée: ${getDeviceName(device, line)}`);
         }
+        
+        // Obtenir le nom du device
+        function getDeviceName(device, line) {
+            const names = {
+                'merlin': `Merlin Ligne ${line}`,
+                'bridgeit-a': `Bridge-IT Studio A (${line})`,
+                'bridgeit-b': `Bridge-IT Studio B (${line})`,
+                'via': 'VIA Extérieur'
+            };
+            return names[device] || `${device} - ${line}`;
+        }
+        
+        // Charger un contact depuis le phonebook
+        function loadContact() {
+            const select = document.getElementById('phonebook');
+            const contactId = select.value;
+            
+            if (!contactId) return;
+            
+            // Contacts prédéfinis (à adapter selon vos besoins)
+            const contacts = {
+                'studio1': { ip: '192.168.1.100', profile: 'music-high', type: 'ip' },
+                'studio2': { ip: '192.168.1.101', profile: 'music-standard', type: 'ip' },
+                'regie': { ip: '192.168.1.102', profile: 'voice-high', type: 'ip' },
+                'mobile1': { number: '+33123456789', profile: 'voice-standard', type: 'isdn' },
+                'mobile2': { number: '+33987654321', profile: 'voice-standard', type: 'isdn' },
+                'extern1': { ip: '82.127.52.49:25013', profile: 'music-high', type: 'ip' },
+                'extern2': { ip: '82.127.52.50:25013', profile: 'music-standard', type: 'ip' }
+            };
+            
+            const contact = contacts[contactId];
+            if (contact) {
+                document.getElementById('manual-number').value = contact.ip || contact.number;
+                document.getElementById('connection-type').value = contact.type;
+                document.getElementById('audio-profile').value = contact.profile;
+                addLog(`Contact chargé: ${select.options[select.selectedIndex].text}`);
+            }
+        }
+        
+        // Ouvrir le gestionnaire de phonebook
+        function openPhonebookManager() {
+            alert('Fonctionnalité à venir: Gestionnaire de Phonebook\n\nPermettra d\'ajouter, modifier et supprimer des contacts.');
+        }
+        
+        // Initier l'appel
+        function initiateCall() {
+            if (!selectedSource) {
+                alert('⚠️ Veuillez sélectionner une SOURCE');
+                return;
+            }
+            if (!selectedDestination) {
+                alert('⚠️ Veuillez sélectionner une DESTINATION');
+                return;
+            }
+            
+            const manualNumber = document.getElementById('manual-number').value;
+            if (!manualNumber) {
+                alert('⚠️ Veuillez entrer un numéro ou une IP');
+                return;
+            }
+            
+            // Récupérer la configuration
+            const config = {
+                source: selectedSource,
+                destination: selectedDestination,
+                number: manualNumber,
+                connectionType: document.getElementById('connection-type').value,
+                audioProfile: document.getElementById('audio-profile').value,
+                audioCodec: document.getElementById('audio-codec').value,
+                smartstream: document.getElementById('smartstream').value,
+                bitrate: document.getElementById('bitrate').value,
+                audioMode: document.getElementById('audio-mode').value
+            };
+            
+            addLog('🚀 Appel en cours...');
+            addLog(`De: ${getDeviceName(config.source.device, config.source.line)}`);
+            addLog(`Vers: ${config.number}`);
+            addLog(`Codec: ${config.audioCodec || 'Auto'} @ ${config.bitrate}kbps`);
+            
+            // Simuler l'établissement de l'appel
+            document.getElementById('call-status').textContent = 'Connexion...';
+            
+            setTimeout(() => {
+                callActive = true;
+                callStartTime = Date.now();
+                document.getElementById('call-button').disabled = true;
+                document.getElementById('hangup-button').disabled = false;
+                document.getElementById('call-status').textContent = 'En ligne ✅';
+                document.getElementById('call-quality').textContent = 'Excellente';
+                addLog('✅ Appel établi avec succès');
+                
+                // Démarrer le timer
+                callTimer = setInterval(updateCallDuration, 1000);
+                
+                // Simuler le buffer
+                let bufferLevel = 0;
+                const bufferInterval = setInterval(() => {
+                    if (!callActive) {
+                        clearInterval(bufferInterval);
+                        return;
+                    }
+                    bufferLevel = Math.min(100, bufferLevel + Math.random() * 10);
+                    document.getElementById('buffer-level').textContent = Math.round(bufferLevel) + '%';
+                    document.getElementById('buffer-bar').style.width = bufferLevel + '%';
+                }, 500);
+                
+            }, 2000);
+            
+            // Ici, ajouter l'appel API réel vers le codec Tieline
+            // TielineAPI.makeCall(config);
+        }
+        
+        // Raccrocher
         function hangupCall() {
-            // Logic to end the call
-            console.log('Call ended');
-            document.getElementById('codec-status').innerText = 'Codec: Disconnected';
+            if (!callActive) return;
+            
+            callActive = false;
+            clearInterval(callTimer);
+            
+            document.getElementById('call-button').disabled = false;
+            document.getElementById('hangup-button').disabled = true;
+            document.getElementById('call-status').textContent = 'Déconnecté';
+            document.getElementById('call-duration').textContent = '00:00';
+            document.getElementById('call-quality').textContent = '-';
+            document.getElementById('buffer-level').textContent = '0%';
+            document.getElementById('buffer-bar').style.width = '0%';
+            
+            addLog('❌ Appel terminé');
+            
+            // Ici, ajouter l'appel API réel vers le codec Tieline
+            // TielineAPI.hangup();
         }
+        
+        // Mettre à jour la durée de l'appel
+        function updateCallDuration() {
+            if (!callActive) return;
+            
+            const elapsed = Math.floor((Date.now() - callStartTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            document.getElementById('call-duration').textContent = 
+                `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+        
+        // Réinitialiser la sélection
+        function clearSelection() {
+            document.querySelectorAll('[data-source], [data-dest]').forEach(el => el.classList.remove('selected'));
+            selectedSource = null;
+            selectedDestination = null;
+            document.getElementById('source-selected').textContent = 'Aucun';
+            document.getElementById('dest-selected').textContent = 'Aucun';
+            document.getElementById('manual-number').value = '';
+            document.getElementById('phonebook').value = '';
+            addLog('🔄 Sélection réinitialisée');
+        }
+        
+        // Sauvegarder la configuration
+        function saveConfig() {
+            const config = {
+                source: selectedSource,
+                destination: selectedDestination,
+                connectionType: document.getElementById('connection-type').value,
+                audioProfile: document.getElementById('audio-profile').value,
+                audioCodec: document.getElementById('audio-codec').value,
+                smartstream: document.getElementById('smartstream').value,
+                bitrate: document.getElementById('bitrate').value,
+                audioMode: document.getElementById('audio-mode').value
+            };
+            
+            localStorage.setItem('tieline-call-config', JSON.stringify(config));
+            addLog('💾 Configuration sauvegardée');
+            alert('✅ Configuration sauvegardée !');
+        }
+        
+        // Charger la configuration sauvegardée
+        function loadSavedConfig() {
+            const saved = localStorage.getItem('tieline-call-config');
+            if (saved) {
+                const config = JSON.parse(saved);
+                document.getElementById('connection-type').value = config.connectionType || 'ip';
+                document.getElementById('audio-profile').value = config.audioProfile || '';
+                document.getElementById('audio-codec').value = config.audioCodec || '';
+                document.getElementById('smartstream').value = config.smartstream || 'auto';
+                document.getElementById('bitrate').value = config.bitrate || '128';
+                document.getElementById('audio-mode').value = config.audioMode || 'stereo';
+                addLog('📂 Configuration chargée');
+            }
+        }
+        
+        // Ajouter une entrée au log
+        function addLog(message) {
+            const log = document.getElementById('activity-log');
+            const time = new Date().toLocaleTimeString();
+            const entry = document.createElement('p');
+            entry.textContent = `[${time}] ${message}`;
+            entry.className = 'text-gray-700 mb-1';
+            
+            if (log.firstChild && log.firstChild.classList.contains('text-gray-500')) {
+                log.innerHTML = '';
+            }
+            
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+        
+        // Charger la config au démarrage
+        window.addEventListener('load', loadSavedConfig);
     </script>
 </body>
 </html>

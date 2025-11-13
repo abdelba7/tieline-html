@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test API Tieline</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white p-6">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6">🔍 Test API Tieline</h1>
+        
+        <div class="bg-gray-800 rounded-lg p-6 mb-6">
+            <h2 class="text-xl font-bold mb-4">Configuration</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <input type="text" id="test-ip" placeholder="IP Codec" value="192.168.1.100"
+                       class="bg-gray-700 border border-gray-600 rounded px-3 py-2">
+                <input type="text" id="test-user" placeholder="Username" value="admin"
+                       class="bg-gray-700 border border-gray-600 rounded px-3 py-2">
+                <input type="password" id="test-pass" placeholder="Password"
+                       class="bg-gray-700 border border-gray-600 rounded px-3 py-2">
+            </div>
+        </div>
+        
+        <div class="bg-gray-800 rounded-lg p-6 mb-6">
+            <h2 class="text-xl font-bold mb-4">Endpoints à tester</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <button onclick="testEndpoint('/api/v1/status')" 
+                        class="bg-blue-600 hover:bg-blue-700 rounded py-2 text-sm">
+                    Test: /api/v1/status
+                </button>
+                <button onclick="testEndpoint('/api/v1/connection')" 
+                        class="bg-blue-600 hover:bg-blue-700 rounded py-2 text-sm">
+                    Test: /api/v1/connection
+                </button>
+                <button onclick="testEndpoint('/api/v1/system/info')" 
+                        class="bg-blue-600 hover:bg-blue-700 rounded py-2 text-sm">
+                    Test: /api/v1/system/info
+                </button>
+                <button onclick="testEndpoint('/api/v1/audio')" 
+                        class="bg-blue-600 hover:bg-blue-700 rounded py-2 text-sm">
+                    Test: /api/v1/audio
+                </button>
+                <button onclick="testEndpoint('/api/v1/gpio')" 
+                        class="bg-blue-600 hover:bg-blue-700 rounded py-2 text-sm">
+                    Test: /api/v1/gpio
+                </button>
+                <button onclick="testEndpoint('/cgi-bin/status.cgi')" 
+                        class="bg-purple-600 hover:bg-purple-700 rounded py-2 text-sm">
+                    Test: /cgi-bin/status.cgi
+                </button>
+                <button onclick="testEndpoint('/cgi-bin/connection_info.cgi')" 
+                        class="bg-purple-600 hover:bg-purple-700 rounded py-2 text-sm">
+                    Test: /cgi-bin/connection_info.cgi
+                </button>
+                <button onclick="testEndpoint('/cgi-bin/gpio_status.cgi')" 
+                        class="bg-purple-600 hover:bg-purple-700 rounded py-2 text-sm">
+                    Test: /cgi-bin/gpio_status.cgi
+                </button>
+            </div>
+            
+            <div class="mt-4">
+                <label class="block text-sm mb-2">Endpoint personnalisé :</label>
+                <div class="flex gap-2">
+                    <input type="text" id="custom-endpoint" placeholder="/votre/endpoint"
+                           class="flex-1 bg-gray-700 border border-gray-600 rounded px-3 py-2">
+                    <button onclick="testCustomEndpoint()" 
+                            class="bg-green-600 hover:bg-green-700 rounded px-6 py-2">
+                        Tester
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-gray-800 rounded-lg p-6">
+            <h2 class="text-xl font-bold mb-4">Résultats</h2>
+            <div id="results" class="bg-gray-900 rounded p-4 font-mono text-xs overflow-auto max-h-96">
+                <p class="text-gray-400">Aucun test effectué</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function testEndpoint(endpoint) {
+            const ip = document.getElementById('test-ip').value;
+            const user = document.getElementById('test-user').value;
+            const pass = document.getElementById('test-pass').value;
+            
+            const url = `http://${ip}${endpoint}`;
+            const resultsDiv = document.getElementById('results');
+            
+            resultsDiv.innerHTML = `<p class="text-yellow-400">⏳ Test en cours: ${url}</p>`;
+            
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Basic ' + btoa(user + ':' + pass),
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                const contentType = response.headers.get('content-type');
+                let data;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    data = await response.text();
+                }
+                
+                resultsDiv.innerHTML = `
+                    <div class="text-green-400 mb-2">✅ SUCCESS: ${endpoint}</div>
+                    <div class="text-gray-400 mb-2">Status: ${response.status} ${response.statusText}</div>
+                    <div class="text-gray-400 mb-2">Content-Type: ${contentType}</div>
+                    <pre class="text-white">${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="text-red-400 mb-2">❌ ERREUR: ${endpoint}</div>
+                    <div class="text-gray-400">${error.message}</div>
+                `;
+            }
+        }
+        
+        function testCustomEndpoint() {
+            const endpoint = document.getElementById('custom-endpoint').value;
+            if (endpoint) {
+                testEndpoint(endpoint);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -7,113 +7,200 @@
     <title>Tieline Call Manager</title>
     <style>
         body { 
-            background-color: #f3f4f6;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .step-card {
+            animation: slideIn 0.4s ease-out;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .fade-out {
+            animation: fadeOut 0.3s ease-out forwards;
+        }
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+                transform: scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: scale(0.95);
+            }
         }
         .machine-card {
             transition: all 0.3s ease;
             cursor: pointer;
         }
         .machine-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
         }
         .machine-card.selected {
-            border: 3px solid #3b82f6;
-            background-color: #eff6ff;
+            border: 3px solid #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
         }
-        .line-btn {
+        .line-btn, .option-btn {
             transition: all 0.2s ease;
+            cursor: pointer;
         }
-        .line-btn:hover {
+        .line-btn:hover, .option-btn:hover {
             transform: scale(1.05);
         }
-        .line-btn.selected {
-            border: 2px solid #10b981;
-            background-color: #d1fae5;
+        .line-btn.selected, .option-btn.selected {
+            border: 3px solid #10b981;
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
         }
         .hidden {
             display: none;
         }
+        .progress-step {
+            transition: all 0.3s ease;
+        }
+        .progress-step.active {
+            background-color: #10b981;
+            color: white;
+        }
+        .progress-step.completed {
+            background-color: #059669;
+            color: white;
+        }
+        .summary-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
     </style>
 </head>
 <body class="p-4">
-    <div class="max-w-6xl mx-auto">
-        <h1 class="text-3xl font-bold text-center mb-6">📞 Tieline Call Manager</h1>
+    <div class="max-w-5xl mx-auto">
         
-        <!-- Section 1: Sélection de la machine -->
-        <div class="bg-white shadow-lg rounded-lg p-6 mb-6">
-            <h2 class="text-xl font-bold mb-4">🎛️ Sélectionner le codec source</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                
+        <!-- Header avec récapitulatif -->
+        <div class="bg-white shadow-lg rounded-lg p-4 mb-6">
+            <div class="flex items-center justify-between flex-wrap">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800">📞 Tieline Call Manager</h1>
+                    <p class="text-sm text-gray-600">Configuration d'appel étape par étape</p>
+                </div>
+                <div>
+                    <button onclick="resetAll()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">
+                        🔄 Recommencer
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Récapitulatif des choix -->
+            <div id="summary" class="mt-4 pt-4 border-t border-gray-200 hidden">
+                <h3 class="text-sm font-bold text-gray-700 mb-2">📋 Récapitulatif :</h3>
+                <div class="flex flex-wrap">
+                    <span id="sum-codec" class="summary-badge hidden"></span>
+                    <span id="sum-line" class="summary-badge hidden"></span>
+                    <span id="sum-type" class="summary-badge hidden"></span>
+                    <span id="sum-destination" class="summary-badge hidden"></span>
+                    <span id="sum-profile" class="summary-badge hidden"></span>
+                </div>
+            </div>
+            
+            <!-- Barre de progression -->
+            <div class="mt-4 flex items-center justify-between text-xs">
+                <div id="progress-1" class="progress-step bg-gray-300 text-gray-600 px-3 py-1 rounded-full">1. Codec</div>
+                <div class="flex-1 h-1 bg-gray-300 mx-2"></div>
+                <div id="progress-2" class="progress-step bg-gray-300 text-gray-600 px-3 py-1 rounded-full">2. Ligne</div>
+                <div class="flex-1 h-1 bg-gray-300 mx-2"></div>
+                <div id="progress-3" class="progress-step bg-gray-300 text-gray-600 px-3 py-1 rounded-full">3. Type</div>
+                <div class="flex-1 h-1 bg-gray-300 mx-2"></div>
+                <div id="progress-4" class="progress-step bg-gray-300 text-gray-600 px-3 py-1 rounded-full">4. Destination</div>
+                <div class="flex-1 h-1 bg-gray-300 mx-2"></div>
+                <div id="progress-5" class="progress-step bg-gray-300 text-gray-600 px-3 py-1 rounded-full">5. Profil</div>
+                <div class="flex-1 h-1 bg-gray-300 mx-2"></div>
+                <div id="progress-6" class="progress-step bg-gray-300 text-gray-600 px-3 py-1 rounded-full">6. Appel</div>
+            </div>
+        </div>
+        
+        <!-- ÉTAPE 1: Sélection du Codec -->
+        <div id="step-1" class="step-card bg-white shadow-xl rounded-lg p-6 mb-6">
+            <h2 class="text-2xl font-bold mb-2">🎛️ Étape 1 : Sélectionnez le codec</h2>
+            <p class="text-sm text-gray-600 mb-6">Choisissez le codec source depuis lequel vous souhaitez émettre</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <!-- Merlin -->
-                <div class="machine-card bg-gradient-to-br from-blue-100 to-blue-200 p-6 rounded-lg border-2 border-blue-300" 
+                <div class="machine-card bg-gradient-to-br from-blue-100 to-blue-200 p-6 rounded-xl border-2 border-blue-300" 
                      onclick="selectMachine('merlin')" data-machine="merlin">
                     <div class="text-center">
-                        <div class="text-4xl mb-2">🎚️</div>
-                        <h3 class="text-xl font-bold mb-1">Merlin</h3>
-                        <p class="text-sm text-gray-600">6 lignes disponibles</p>
-                        <p class="text-xs text-gray-500 mt-2">IP: 82.127.52.49:25011</p>
+                        <div class="text-5xl mb-3">🎚️</div>
+                        <h3 class="text-xl font-bold mb-2">Merlin</h3>
+                        <p class="text-sm text-gray-700 font-semibold">6 lignes disponibles</p>
+                        <p class="text-xs text-gray-600 mt-2">82.127.52.49:25011</p>
                     </div>
                 </div>
                 
                 <!-- Bridge-IT Studio A -->
-                <div class="machine-card bg-gradient-to-br from-purple-100 to-purple-200 p-6 rounded-lg border-2 border-purple-300" 
+                <div class="machine-card bg-gradient-to-br from-purple-100 to-purple-200 p-6 rounded-xl border-2 border-purple-300" 
                      onclick="selectMachine('bridgeit-a')" data-machine="bridgeit-a">
                     <div class="text-center">
-                        <div class="text-4xl mb-2">🎙️</div>
-                        <h3 class="text-xl font-bold mb-1">Bridge-IT</h3>
-                        <p class="text-sm text-gray-600">Studio A</p>
-                        <p class="text-xs text-gray-500 mt-2">Stéréo / 2×Mono</p>
+                        <div class="text-5xl mb-3">🎙️</div>
+                        <h3 class="text-xl font-bold mb-2">Bridge-IT</h3>
+                        <p class="text-sm text-gray-700 font-semibold">Studio A</p>
+                        <p class="text-xs text-gray-600 mt-2">Stéréo / 2×Mono</p>
                     </div>
                 </div>
                 
                 <!-- Bridge-IT Studio B -->
-                <div class="machine-card bg-gradient-to-br from-purple-100 to-purple-200 p-6 rounded-lg border-2 border-purple-300" 
+                <div class="machine-card bg-gradient-to-br from-orange-100 to-orange-200 p-6 rounded-xl border-2 border-orange-300" 
                      onclick="selectMachine('bridgeit-b')" data-machine="bridgeit-b">
                     <div class="text-center">
-                        <div class="text-4xl mb-2">🎙️</div>
-                        <h3 class="text-xl font-bold mb-1">Bridge-IT</h3>
-                        <p class="text-sm text-gray-600">Studio B</p>
-                        <p class="text-xs text-gray-500 mt-2">Stéréo / 2×Mono</p>
+                        <div class="text-5xl mb-3">🎙️</div>
+                        <h3 class="text-xl font-bold mb-2">Bridge-IT</h3>
+                        <p class="text-sm text-gray-700 font-semibold">Studio B</p>
+                        <p class="text-xs text-gray-600 mt-2">Stéréo / 2×Mono</p>
                     </div>
                 </div>
             </div>
-            
-            <div class="mt-4 p-3 bg-blue-50 rounded">
-                <p class="text-sm"><strong>Codec sélectionné:</strong> <span id="machine-selected" class="text-blue-600 font-semibold">Aucun</span></p>
-            </div>
         </div>
         
-        <!-- Section 2: Sélection de la ligne (caché par défaut) -->
-        <div id="line-section" class="bg-white shadow-lg rounded-lg p-6 mb-6 hidden">
-            <h2 class="text-xl font-bold mb-4">📡 Sélectionner la ligne</h2>
+        <!-- ÉTAPE 2: Sélection de la Ligne -->
+        <div id="step-2" class="step-card bg-white shadow-xl rounded-lg p-6 mb-6 hidden">
+            <h2 class="text-2xl font-bold mb-2">📡 Étape 2 : Sélectionnez la ligne</h2>
+            <p class="text-sm text-gray-600 mb-6">Choisissez la ligne à utiliser sur le codec <strong id="step2-codec-name"></strong></p>
             
             <!-- Lignes Merlin -->
             <div id="merlin-lines" class="hidden">
                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-                    <button onclick="selectLine(1)" class="line-btn bg-blue-100 hover:bg-blue-200 py-4 px-3 rounded-lg border-2 border-blue-300" data-line="1">
+                    <button onclick="selectLine(1)" class="line-btn bg-blue-50 hover:bg-blue-100 py-4 px-3 rounded-xl border-2 border-blue-300" data-line="1">
                         <div class="font-bold text-lg">Ligne 1</div>
-                        <div class="text-xs text-gray-600 mt-1" id="merlin-line-1-status">Disponible</div>
+                        <div class="text-xs text-gray-600 mt-1">Disponible</div>
                     </button>
-                    <button onclick="selectLine(2)" class="line-btn bg-blue-100 hover:bg-blue-200 py-4 px-3 rounded-lg border-2 border-blue-300" data-line="2">
+                    <button onclick="selectLine(2)" class="line-btn bg-blue-50 hover:bg-blue-100 py-4 px-3 rounded-xl border-2 border-blue-300" data-line="2">
                         <div class="font-bold text-lg">Ligne 2</div>
-                        <div class="text-xs text-gray-600 mt-1" id="merlin-line-2-status">Disponible</div>
+                        <div class="text-xs text-gray-600 mt-1">Disponible</div>
                     </button>
-                    <button onclick="selectLine(3)" class="line-btn bg-blue-100 hover:bg-blue-200 py-4 px-3 rounded-lg border-2 border-blue-300" data-line="3">
+                    <button onclick="selectLine(3)" class="line-btn bg-blue-50 hover:bg-blue-100 py-4 px-3 rounded-xl border-2 border-blue-300" data-line="3">
                         <div class="font-bold text-lg">Ligne 3</div>
-                        <div class="text-xs text-gray-600 mt-1" id="merlin-line-3-status">Disponible</div>
+                        <div class="text-xs text-gray-600 mt-1">Disponible</div>
                     </button>
-                    <button onclick="selectLine(4)" class="line-btn bg-blue-100 hover:bg-blue-200 py-4 px-3 rounded-lg border-2 border-blue-300" data-line="4">
+                    <button onclick="selectLine(4)" class="line-btn bg-blue-50 hover:bg-blue-100 py-4 px-3 rounded-xl border-2 border-blue-300" data-line="4">
                         <div class="font-bold text-lg">Ligne 4</div>
-                        <div class="text-xs text-gray-600 mt-1" id="merlin-line-4-status">Disponible</div>
+                        <div class="text-xs text-gray-600 mt-1">Disponible</div>
                     </button>
-                    <button onclick="selectLine(5)" class="line-btn bg-blue-100 hover:bg-blue-200 py-4 px-3 rounded-lg border-2 border-blue-300" data-line="5">
+                    <button onclick="selectLine(5)" class="line-btn bg-blue-50 hover:bg-blue-100 py-4 px-3 rounded-xl border-2 border-blue-300" data-line="5">
                         <div class="font-bold text-lg">Ligne 5</div>
-                        <div class="text-xs text-gray-600 mt-1" id="merlin-line-5-status">Disponible</div>
+                        <div class="text-xs text-gray-600 mt-1">Disponible</div>
                     </button>
-                    <button onclick="selectLine(6)" class="line-btn bg-blue-100 hover:bg-blue-200 py-4 px-3 rounded-lg border-2 border-blue-300" data-line="6">
+                    <button onclick="selectLine(6)" class="line-btn bg-blue-50 hover:bg-blue-100 py-4 px-3 rounded-xl border-2 border-blue-300" data-line="6">
                         <div class="font-bold text-lg">Ligne 6</div>
-                        <div class="text-xs text-gray-600 mt-1" id="merlin-line-6-status">Disponible</div>
+                        <div class="text-xs text-gray-600 mt-1">Disponible</div>
                     </button>
                 </div>
             </div>
@@ -121,104 +208,51 @@
             <!-- Lignes Bridge-IT -->
             <div id="bridgeit-lines" class="hidden">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <button onclick="selectLine('stereo')" class="line-btn bg-purple-100 hover:bg-purple-200 py-6 px-4 rounded-lg border-2 border-purple-300" data-line="stereo">
-                        <div class="font-bold text-xl">Mode Stéréo</div>
-                        <div class="text-sm text-gray-600 mt-2">1 ligne stéréo</div>
+                    <button onclick="selectLine('stereo')" class="line-btn bg-purple-50 hover:bg-purple-100 py-8 px-6 rounded-xl border-2 border-purple-300" data-line="stereo">
+                        <div class="font-bold text-2xl mb-2">🎵 Mode Stéréo</div>
+                        <div class="text-sm text-gray-600">1 ligne stéréo (L+R)</div>
                     </button>
-                    <button onclick="selectLine('dual-mono')" class="line-btn bg-purple-100 hover:bg-purple-200 py-6 px-4 rounded-lg border-2 border-purple-300" data-line="dual-mono">
-                        <div class="font-bold text-xl">Mode Dual Mono</div>
-                        <div class="text-sm text-gray-600 mt-2">2 lignes mono indépendantes</div>
+                    <button onclick="selectLine('dual-mono')" class="line-btn bg-purple-50 hover:bg-purple-100 py-8 px-6 rounded-xl border-2 border-purple-300" data-line="dual-mono">
+                        <div class="font-bold text-2xl mb-2">🎚️ Mode Dual Mono</div>
+                        <div class="text-sm text-gray-600">2 lignes mono indépendantes</div>
                     </button>
                 </div>
-            </div>
-            
-            <div class="mt-4 p-3 bg-green-50 rounded">
-                <p class="text-sm"><strong>Ligne sélectionnée:</strong> <span id="line-selected" class="text-green-600 font-semibold">Aucune</span></p>
             </div>
         </div>
         
-        <!-- Section 3: Profil/Programme -->
-        <div id="profile-section" class="bg-white shadow-lg rounded-lg p-6 mb-6 hidden">
-            <h2 class="text-xl font-bold mb-4">⚙️ Profil de connexion (Programme)</h2>
+        <!-- ÉTAPE 3: Type de connexion -->
+        <div id="step-3" class="step-card bg-white shadow-xl rounded-lg p-6 mb-6 hidden">
+            <h2 class="text-2xl font-bold mb-2">🌐 Étape 3 : Type de connexion</h2>
+            <p class="text-sm text-gray-600 mb-6">Choisissez le type de connexion à utiliser</p>
             
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                
-                <!-- Sélection profil prédéfini -->
-                <div>
-                    <label class="block text-sm font-semibold mb-2">📋 Profils enregistrés</label>
-                    <select id="profile-select" class="w-full border-2 border-gray-300 rounded-lg p-3 mb-3" onchange="loadProfile()">
-                        <option value="">-- Sélectionner un profil --</option>
-                        <option value="music-high">Music High Quality (256 kbps)</option>
-                        <option value="music-standard">Music Standard (128 kbps)</option>
-                        <option value="voice-high">Voice High Quality (96 kbps)</option>
-                        <option value="voice-standard">Voice Standard (64 kbps)</option>
-                        <option value="custom">Personnalisé</option>
-                    </select>
-                    <button onclick="manageProfiles()" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg text-sm">
-                        ✏️ Gérer les profils
-                    </button>
-                </div>
-                
-                <!-- Configuration manuelle -->
-                <div>
-                    <label class="block text-sm font-semibold mb-2">🎛️ Configuration manuelle</label>
-                    
-                    <div class="space-y-2">
-                        <div>
-                            <label class="text-xs text-gray-600">Codec Audio</label>
-                            <select id="codec" class="w-full border border-gray-300 rounded p-2 text-sm">
-                                <option value="musicam">Musicam</option>
-                                <option value="mpeg2">MPEG Layer 2</option>
-                                <option value="aptx">aptX Enhanced</option>
-                                <option value="opus">Opus</option>
-                                <option value="aac">AAC-LD</option>
-                                <option value="g722">G.722</option>
-                            </select>
-                        </div>
-                        
-                        <div class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label class="text-xs text-gray-600">Bitrate</label>
-                                <select id="bitrate" class="w-full border border-gray-300 rounded p-2 text-sm">
-                                    <option value="64">64 kbps</option>
-                                    <option value="96">96 kbps</option>
-                                    <option value="128" selected>128 kbps</option>
-                                    <option value="192">192 kbps</option>
-                                    <option value="256">256 kbps</option>
-                                    <option value="320">320 kbps</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="text-xs text-gray-600">Mode</label>
-                                <select id="audio-mode" class="w-full border border-gray-300 rounded p-2 text-sm">
-                                    <option value="stereo">Stéréo</option>
-                                    <option value="mono">Mono</option>
-                                    <option value="joint">Joint Stéréo</option>
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <div>
-                            <label class="flex items-center">
-                                <input type="checkbox" id="smartstream" class="mr-2" checked>
-                                <span class="text-sm">SmartStream (adaptation automatique)</span>
-                            </label>
-                        </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <button onclick="selectConnectionType('ip')" class="option-btn bg-gradient-to-br from-blue-50 to-blue-100 py-10 px-6 rounded-xl border-2 border-blue-300" data-type="ip">
+                    <div class="text-center">
+                        <div class="text-5xl mb-3">🌐</div>
+                        <div class="font-bold text-2xl mb-2">IP (Internet)</div>
+                        <div class="text-sm text-gray-600">Connexion via réseau IP</div>
                     </div>
-                </div>
+                </button>
+                <button onclick="selectConnectionType('isdn')" class="option-btn bg-gradient-to-br from-green-50 to-green-100 py-10 px-6 rounded-xl border-2 border-green-300" data-type="isdn">
+                    <div class="text-center">
+                        <div class="text-5xl mb-3">☎️</div>
+                        <div class="font-bold text-2xl mb-2">RNIS (ISDN)</div>
+                        <div class="text-sm text-gray-600">Connexion via ligne téléphonique</div>
+                    </div>
+                </button>
             </div>
         </div>
         
-        <!-- Section 4: Numérotation -->
-        <div id="dial-section" class="bg-white shadow-lg rounded-lg p-6 mb-6 hidden">
-            <h2 class="text-xl font-bold mb-4">📞 Numérotation</h2>
+        <!-- ÉTAPE 4: Destination -->
+        <div id="step-4" class="step-card bg-white shadow-xl rounded-lg p-6 mb-6 hidden">
+            <h2 class="text-2xl font-bold mb-2">🎯 Étape 4 : Destination</h2>
+            <p class="text-sm text-gray-600 mb-6">Entrez la destination ou sélectionnez un contact</p>
             
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                
                 <!-- Phonebook -->
                 <div>
-                    <label class="block text-sm font-semibold mb-2">📖 Carnet d'adresses</label>
-                    <select id="phonebook" class="w-full border-2 border-gray-300 rounded-lg p-3 mb-3" onchange="loadContact()">
+                    <label class="block text-sm font-bold mb-3">📖 Carnet d'adresses</label>
+                    <select id="phonebook" class="w-full border-2 border-gray-300 rounded-lg p-3 mb-3 text-base" onchange="loadContact()">
                         <option value="">-- Sélectionner un contact --</option>
                         <optgroup label="Studios">
                             <option value="studio-principal">Studio Principal</option>
@@ -235,161 +269,210 @@
                             <option value="lyon-antenne">Lyon Antenne</option>
                         </optgroup>
                     </select>
-                    <button onclick="managePhonebook()" class="w-full bg-gray-500 hover:bg-gray-600 text-white py-2 rounded-lg text-sm">
-                        ✏️ Gérer le carnet d'adresses
-                    </button>
                 </div>
                 
-                <!-- Numérotation manuelle -->
+                <!-- Saisie manuelle -->
                 <div>
-                    <label class="block text-sm font-semibold mb-2">🔢 Numérotation manuelle</label>
-                    
-                    <div class="mb-3">
-                        <label class="text-xs text-gray-600 mb-1 block">Type de connexion</label>
-                        <div class="grid grid-cols-2 gap-2 mb-3">
-                            <button onclick="setConnectionType('ip')" id="btn-ip" class="py-2 px-4 rounded-lg border-2 border-blue-500 bg-blue-100 font-semibold">
-                                🌐 IP
-                            </button>
-                            <button onclick="setConnectionType('isdn')" id="btn-isdn" class="py-2 px-4 rounded-lg border-2 border-gray-300 bg-white font-semibold">
-                                ☎️ RNIS
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div id="ip-input" class="block">
-                        <label class="text-xs text-gray-600 mb-1 block">Adresse IP et Port</label>
+                    <label class="block text-sm font-bold mb-3">✍️ Saisie manuelle</label>
+                    <div id="ip-input">
                         <input type="text" id="ip-address" placeholder="192.168.1.100:3000" 
-                               class="w-full border-2 border-gray-300 rounded-lg p-3 mb-2">
-                        <p class="text-xs text-gray-500">Format: IP:Port (ex: 192.168.1.100:3000)</p>
+                               class="w-full border-2 border-gray-300 rounded-lg p-3 mb-2 text-base">
+                        <p class="text-xs text-gray-500">Format: IP:Port</p>
                     </div>
-                    
                     <div id="isdn-input" class="hidden">
-                        <label class="text-xs text-gray-600 mb-1 block">Numéro RNIS</label>
                         <input type="text" id="isdn-number" placeholder="+33 1 23 45 67 89" 
-                               class="w-full border-2 border-gray-300 rounded-lg p-3 mb-2">
-                        <p class="text-xs text-gray-500">Format international (ex: +33 1 23 45 67 89)</p>
+                               class="w-full border-2 border-gray-300 rounded-lg p-3 mb-2 text-base">
+                        <p class="text-xs text-gray-500">Format international</p>
                     </div>
                 </div>
             </div>
+            
+            <div class="mt-6">
+                <button onclick="confirmDestination()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-lg text-lg">
+                    ✅ Confirmer la destination
+                </button>
+            </div>
         </div>
         
-        <!-- Section 5: Actions et Statut -->
-        <div id="action-section" class="bg-white shadow-lg rounded-lg p-6 hidden">
+        <!-- ÉTAPE 5: Profil Audio -->
+        <div id="step-5" class="step-card bg-white shadow-xl rounded-lg p-6 mb-6 hidden">
+            <h2 class="text-2xl font-bold mb-2">⚙️ Étape 5 : Configuration audio</h2>
+            <p class="text-sm text-gray-600 mb-6">Choisissez un profil ou configurez manuellement</p>
+            
+            <div class="mb-6">
+                <label class="block text-sm font-bold mb-3">📋 Profils prédéfinis</label>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <button onclick="selectProfile('music-high')" class="option-btn bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-xl border-2 border-purple-300 text-left" data-profile="music-high">
+                        <div class="font-bold text-lg">🎵 Music High Quality</div>
+                        <div class="text-sm text-gray-600 mt-1">Musicam - 256 kbps - Stéréo</div>
+                    </button>
+                    <button onclick="selectProfile('music-standard')" class="option-btn bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-xl border-2 border-purple-300 text-left" data-profile="music-standard">
+                        <div class="font-bold text-lg">🎶 Music Standard</div>
+                        <div class="text-sm text-gray-600 mt-1">MPEG2 - 128 kbps - Stéréo</div>
+                    </button>
+                    <button onclick="selectProfile('voice-high')" class="option-btn bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl border-2 border-blue-300 text-left" data-profile="voice-high">
+                        <div class="font-bold text-lg">🎤 Voice High Quality</div>
+                        <div class="text-sm text-gray-600 mt-1">aptX - 96 kbps - Mono</div>
+                    </button>
+                    <button onclick="selectProfile('voice-standard')" class="option-btn bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl border-2 border-blue-300 text-left" data-profile="voice-standard">
+                        <div class="font-bold text-lg">📞 Voice Standard</div>
+                        <div class="text-sm text-gray-600 mt-1">G.722 - 64 kbps - Mono</div>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="border-t pt-6">
+                <label class="block text-sm font-bold mb-3">🎛️ Configuration manuelle</label>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="text-xs text-gray-600 block mb-1">Codec</label>
+                        <select id="codec" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
+                            <option value="musicam">Musicam</option>
+                            <option value="mpeg2">MPEG Layer 2</option>
+                            <option value="aptx">aptX</option>
+                            <option value="opus">Opus</option>
+                            <option value="aac">AAC-LD</option>
+                            <option value="g722">G.722</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-600 block mb-1">Bitrate</label>
+                        <select id="bitrate" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
+                            <option value="64">64 kbps</option>
+                            <option value="96">96 kbps</option>
+                            <option value="128" selected>128 kbps</option>
+                            <option value="192">192 kbps</option>
+                            <option value="256">256 kbps</option>
+                            <option value="320">320 kbps</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-600 block mb-1">Mode</label>
+                        <select id="audio-mode" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
+                            <option value="stereo">Stéréo</option>
+                            <option value="mono">Mono</option>
+                            <option value="joint">Joint Stéréo</option>
+                        </select>
+                    </div>
+                    <div class="flex items-end">
+                        <label class="flex items-center">
+                            <input type="checkbox" id="smartstream" class="mr-2" checked>
+                            <span class="text-sm">SmartStream</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-6">
+                <button onclick="confirmProfile()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-lg text-lg">
+                    ✅ Confirmer la configuration
+                </button>
+            </div>
+        </div>
+        
+        <!-- ÉTAPE 6: Appel et Monitoring -->
+        <div id="step-6" class="step-card bg-white shadow-xl rounded-lg p-6 mb-6 hidden">
+            <h2 class="text-2xl font-bold mb-4">📞 Étape 6 : Gestion de l'appel</h2>
+            
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                
                 <!-- Boutons d'action -->
                 <div class="lg:col-span-2">
-                    <h2 class="text-xl font-bold mb-4">🎬 Actions</h2>
-                    <div class="grid grid-cols-2 gap-4 mb-4">
-                        <button id="call-button" onclick="initiateCall()" 
-                                class="bg-green-500 hover:bg-green-600 text-white font-bold py-6 rounded-lg text-xl shadow-lg">
-                            📞 Appeler
-                        </button>
-                        <button id="hangup-button" onclick="hangupCall()" 
-                                class="bg-red-500 hover:bg-red-600 text-white font-bold py-6 rounded-lg text-xl shadow-lg" disabled>
-                            ❌ Raccrocher
-                        </button>
+                    <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-6 rounded-xl border-2 border-gray-300 mb-6">
+                        <h3 class="font-bold text-lg mb-4">🎬 Contrôle d'appel</h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            <button id="call-button" onclick="initiateCall()" 
+                                    class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-8 rounded-xl text-2xl shadow-lg">
+                                📞 Appeler
+                            </button>
+                            <button id="hangup-button" onclick="hangupCall()" 
+                                    class="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold py-8 rounded-xl text-2xl shadow-lg opacity-50 cursor-not-allowed" disabled>
+                                ❌ Raccrocher
+                            </button>
+                        </div>
                     </div>
-                    <div class="grid grid-cols-3 gap-3">
-                        <button onclick="resetAll()" class="bg-gray-400 hover:bg-gray-500 text-white font-bold py-3 rounded-lg">
-                            🔄 Réinitialiser
-                        </button>
-                        <button onclick="saveCurrentConfig()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-lg">
-                            💾 Sauvegarder
-                        </button>
-                        <button onclick="loadSavedConfig()" class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 rounded-lg">
-                            📂 Charger
-                        </button>
+                    
+                    <!-- Log d'activité -->
+                    <div class="bg-gray-900 text-green-400 p-4 rounded-xl font-mono text-xs h-48 overflow-y-auto">
+                        <div id="activity-log">
+                            <p class="text-gray-500">[Système prêt]</p>
+                        </div>
                     </div>
                 </div>
                 
-                <!-- Statut de l'appel -->
+                <!-- Monitoring -->
                 <div>
-                    <h2 class="text-xl font-bold mb-4">📊 Statut</h2>
-                    <div class="bg-gray-100 p-4 rounded-lg">
-                        <div class="mb-3">
-                            <div class="flex items-center justify-between mb-1">
-                                <span class="text-sm font-semibold">État:</span>
-                                <span id="call-status" class="text-sm px-2 py-1 rounded bg-gray-300">Inactif</span>
+                    <div class="bg-gradient-to-br from-gray-800 to-gray-900 text-white p-6 rounded-xl">
+                        <h3 class="font-bold text-lg mb-4">📊 Monitoring</h3>
+                        
+                        <div class="mb-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm">État:</span>
+                                <span id="call-status" class="px-3 py-1 rounded-full text-xs font-bold bg-gray-700">Inactif</span>
                             </div>
                         </div>
-                        <div class="mb-3">
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm font-semibold">Durée:</span>
-                                <span id="call-duration" class="text-lg font-mono">00:00</span>
+                        
+                        <div class="mb-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm">Durée:</span>
+                                <span id="call-duration" class="text-3xl font-mono font-bold">00:00</span>
                             </div>
                         </div>
-                        <div class="mb-3">
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm font-semibold">Qualité:</span>
-                                <span id="call-quality" class="text-sm">-</span>
+                        
+                        <div class="mb-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm">Qualité:</span>
+                                <span id="call-quality" class="text-lg font-semibold">-</span>
+                            </div>
+                            <div class="w-full bg-gray-700 rounded-full h-2">
+                                <div id="quality-bar" class="bg-green-500 h-2 rounded-full transition-all" style="width: 0%"></div>
                             </div>
                         </div>
+                        
                         <div>
                             <div class="flex items-center justify-between text-xs mb-1">
                                 <span>Buffer:</span>
                                 <span id="buffer-level">0%</span>
                             </div>
-                            <div class="w-full bg-gray-300 rounded-full h-2">
-                                <div id="buffer-bar" class="bg-green-500 h-2 rounded-full transition-all" style="width: 0%"></div>
+                            <div class="w-full bg-gray-700 rounded-full h-2">
+                                <div id="buffer-bar" class="bg-blue-500 h-2 rounded-full transition-all" style="width: 0%"></div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-            
-            <!-- Log d'activité -->
-            <div class="mt-6">
-                <h3 class="font-semibold mb-2">📝 Log d'activité</h3>
-                <div id="activity-log" class="bg-gray-50 p-4 rounded-lg max-h-40 overflow-y-auto text-sm font-mono border border-gray-200">
-                    <p class="text-gray-500">En attente de sélection...</p>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        let selectedMachine = null;
-        let selectedLine = null;
-        let connectionType = 'ip';
-        let callActive = false;
-        let callTimer = null;
-        let callStartTime = null;
+        // État de l'application
+        let state = {
+            currentStep: 1,
+            machine: null,
+            line: null,
+            connectionType: null,
+            destination: null,
+            profile: null,
+            callActive: false,
+            callTimer: null,
+            callStartTime: null
+        };
         
         // Configuration des machines
         const machines = {
-            'merlin': {
-                name: 'Merlin',
-                ip: '82.127.52.49',
-                port: 25011,
-                lines: [1, 2, 3, 4, 5, 6],
-                api: 'rest' // ou 'cgi' selon le modèle
-            },
-            'bridgeit-a': {
-                name: 'Bridge-IT Studio A',
-                ip: '192.168.1.101',
-                port: 80,
-                lines: ['stereo', 'dual-mono'],
-                api: 'cgi'
-            },
-            'bridgeit-b': {
-                name: 'Bridge-IT Studio B',
-                ip: '192.168.1.102',
-                port: 80,
-                lines: ['stereo', 'dual-mono'],
-                api: 'cgi'
-            }
+            'merlin': { name: 'Merlin', ip: '82.127.52.49', port: 25011 },
+            'bridgeit-a': { name: 'Bridge-IT Studio A', ip: '192.168.1.101', port: 80 },
+            'bridgeit-b': { name: 'Bridge-IT Studio B', ip: '192.168.1.102', port: 80 }
         };
         
-        // Profils prédéfinis
+        // Profils audio
         const profiles = {
-            'music-high': { codec: 'musicam', bitrate: '256', mode: 'stereo', smartstream: true },
-            'music-standard': { codec: 'mpeg2', bitrate: '128', mode: 'stereo', smartstream: true },
-            'voice-high': { codec: 'aptx', bitrate: '96', mode: 'mono', smartstream: true },
-            'voice-standard': { codec: 'g722', bitrate: '64', mode: 'mono', smartstream: false }
+            'music-high': { codec: 'musicam', bitrate: '256', mode: 'stereo', smartstream: true, label: 'Music High (256k)' },
+            'music-standard': { codec: 'mpeg2', bitrate: '128', mode: 'stereo', smartstream: true, label: 'Music Std (128k)' },
+            'voice-high': { codec: 'aptx', bitrate: '96', mode: 'mono', smartstream: true, label: 'Voice High (96k)' },
+            'voice-standard': { codec: 'g722', bitrate: '64', mode: 'mono', smartstream: false, label: 'Voice Std (64k)' }
         };
         
-        // Contacts du phonebook
+        // Phonebook
         const phonebook = {
             'studio-principal': { type: 'ip', address: '192.168.1.100:3000', profile: 'music-high' },
             'studio-secondaire': { type: 'ip', address: '192.168.1.101:3000', profile: 'music-standard' },
@@ -401,87 +484,83 @@
             'lyon-antenne': { type: 'ip', address: '10.0.2.50:3000', profile: 'music-standard' }
         };
         
-        // Sélectionner une machine
+        // Sélectionner machine
         function selectMachine(machineId) {
-            selectedMachine = machineId;
-            selectedLine = null;
+            state.machine = machineId;
             
-            // Mise à jour visuelle
             document.querySelectorAll('[data-machine]').forEach(el => el.classList.remove('selected'));
             document.querySelector(`[data-machine="${machineId}"]`).classList.add('selected');
             
-            // Afficher le nom
-            document.getElementById('machine-selected').textContent = machines[machineId].name;
+            updateSummary('codec', `📟 ${machines[machineId].name}`);
             
-            // Afficher la section lignes
-            document.getElementById('line-section').classList.remove('hidden');
-            
-            // Afficher les bonnes lignes
-            document.getElementById('merlin-lines').classList.add('hidden');
-            document.getElementById('bridgeit-lines').classList.add('hidden');
-            
-            if (machineId === 'merlin') {
-                document.getElementById('merlin-lines').classList.remove('hidden');
-                // Charger le statut des lignes via API
-                // loadLineStatus(machineId);
-            } else {
-                document.getElementById('bridgeit-lines').classList.remove('hidden');
-            }
-            
-            // Réinitialiser la sélection de ligne
-            document.querySelectorAll('.line-btn').forEach(el => el.classList.remove('selected'));
-            document.getElementById('line-selected').textContent = 'Aucune';
-            
-            // Cacher les sections suivantes
-            document.getElementById('profile-section').classList.add('hidden');
-            document.getElementById('dial-section').classList.add('hidden');
-            document.getElementById('action-section').classList.add('hidden');
-            
-            addLog(`Codec sélectionné: ${machines[machineId].name}`);
+            setTimeout(() => {
+                hideStep(1);
+                showStep(2);
+                document.getElementById('step2-codec-name').textContent = machines[machineId].name;
+                
+                // Afficher les bonnes lignes
+                document.getElementById('merlin-lines').classList.add('hidden');
+                document.getElementById('bridgeit-lines').classList.add('hidden');
+                
+                if (machineId === 'merlin') {
+                    document.getElementById('merlin-lines').classList.remove('hidden');
+                } else {
+                    document.getElementById('bridgeit-lines').classList.remove('hidden');
+                }
+                
+                addLog(`Codec sélectionné: ${machines[machineId].name}`);
+            }, 300);
         }
         
-        // Sélectionner une ligne
+        // Sélectionner ligne
         function selectLine(line) {
-            selectedLine = line;
+            state.line = line;
             
-            // Mise à jour visuelle
             document.querySelectorAll('.line-btn').forEach(el => el.classList.remove('selected'));
             document.querySelector(`[data-line="${line}"]`).classList.add('selected');
             
-            // Afficher le nom
             const lineName = typeof line === 'number' ? `Ligne ${line}` : 
-                            line === 'stereo' ? 'Mode Stéréo' : 'Mode Dual Mono';
-            document.getElementById('line-selected').textContent = lineName;
+                            line === 'stereo' ? 'Stéréo' : 'Dual Mono';
+            updateSummary('line', `📡 ${lineName}`);
             
-            // Afficher les sections suivantes
-            document.getElementById('profile-section').classList.remove('hidden');
-            document.getElementById('dial-section').classList.remove('hidden');
-            document.getElementById('action-section').classList.remove('hidden');
-            
-            addLog(`Ligne sélectionnée: ${lineName}`);
+            setTimeout(() => {
+                hideStep(2);
+                showStep(3);
+                addLog(`Ligne sélectionnée: ${lineName}`);
+            }, 300);
         }
         
-        // Charger un profil
-        function loadProfile() {
-            const profileId = document.getElementById('profile-select').value;
-            if (!profileId || profileId === 'custom') return;
+        // Sélectionner type de connexion
+        function selectConnectionType(type) {
+            state.connectionType = type;
             
-            const profile = profiles[profileId];
-            document.getElementById('codec').value = profile.codec;
-            document.getElementById('bitrate').value = profile.bitrate;
-            document.getElementById('audio-mode').value = profile.mode;
-            document.getElementById('smartstream').checked = profile.smartstream;
+            document.querySelectorAll('[data-type]').forEach(el => el.classList.remove('selected'));
+            document.querySelector(`[data-type="${type}"]`).classList.add('selected');
             
-            addLog(`Profil chargé: ${document.getElementById('profile-select').selectedOptions[0].text}`);
+            updateSummary('type', type === 'ip' ? '🌐 IP' : '☎️ RNIS');
+            
+            // Adapter l'input dans l'étape 4
+            if (type === 'ip') {
+                document.getElementById('ip-input').classList.remove('hidden');
+                document.getElementById('isdn-input').classList.add('hidden');
+            } else {
+                document.getElementById('ip-input').classList.add('hidden');
+                document.getElementById('isdn-input').classList.remove('hidden');
+            }
+            
+            setTimeout(() => {
+                hideStep(3);
+                showStep(4);
+                addLog(`Type de connexion: ${type === 'ip' ? 'IP' : 'RNIS'}`);
+            }, 300);
         }
         
-        // Charger un contact
+        // Charger contact
         function loadContact() {
             const contactId = document.getElementById('phonebook').value;
             if (!contactId) return;
             
             const contact = phonebook[contactId];
-            setConnectionType(contact.type);
             
             if (contact.type === 'ip') {
                 document.getElementById('ip-address').value = contact.address;
@@ -489,216 +568,140 @@
                 document.getElementById('isdn-number').value = contact.number;
             }
             
-            // Charger le profil associé
-            document.getElementById('profile-select').value = contact.profile;
-            loadProfile();
-            
             addLog(`Contact chargé: ${document.getElementById('phonebook').selectedOptions[0].text}`);
         }
         
-        // Changer le type de connexion
-        function setConnectionType(type) {
-            connectionType = type;
-            
-            if (type === 'ip') {
-                document.getElementById('btn-ip').classList.add('border-blue-500', 'bg-blue-100');
-                document.getElementById('btn-ip').classList.remove('border-gray-300', 'bg-white');
-                document.getElementById('btn-isdn').classList.remove('border-blue-500', 'bg-blue-100');
-                document.getElementById('btn-isdn').classList.add('border-gray-300', 'bg-white');
-                document.getElementById('ip-input').classList.remove('hidden');
-                document.getElementById('isdn-input').classList.add('hidden');
-            } else {
-                document.getElementById('btn-isdn').classList.add('border-blue-500', 'bg-blue-100');
-                document.getElementById('btn-isdn').classList.remove('border-gray-300', 'bg-white');
-                document.getElementById('btn-ip').classList.remove('border-blue-500', 'bg-blue-100');
-                document.getElementById('btn-ip').classList.add('border-gray-300', 'bg-white');
-                document.getElementById('isdn-input').classList.remove('hidden');
-                document.getElementById('ip-input').classList.add('hidden');
-            }
-        }
-        
-        // Initier l'appel
-        async function initiateCall() {
-            if (!selectedMachine) {
-                alert('⚠️ Veuillez sélectionner un codec');
-                return;
-            }
-            if (!selectedLine) {
-                alert('⚠️ Veuillez sélectionner une ligne');
-                return;
-            }
-            
-            const destination = connectionType === 'ip' ? 
+        // Confirmer destination
+        function confirmDestination() {
+            const dest = state.connectionType === 'ip' ? 
                 document.getElementById('ip-address').value : 
                 document.getElementById('isdn-number').value;
-                
-            if (!destination) {
+            
+            if (!dest) {
                 alert('⚠️ Veuillez entrer une destination');
                 return;
             }
             
-            // Configuration de l'appel
-            const config = {
-                machine: machines[selectedMachine],
-                line: selectedLine,
-                destination: destination,
-                type: connectionType,
-                codec: document.getElementById('codec').value,
-                bitrate: document.getElementById('bitrate').value,
-                mode: document.getElementById('audio-mode').value,
-                smartstream: document.getElementById('smartstream').checked
-            };
+            state.destination = dest;
+            updateSummary('destination', `🎯 ${dest}`);
             
-            addLog('🚀 Établissement de l\'appel...');
-            addLog(`Codec: ${config.machine.name} - Ligne ${selectedLine}`);
-            addLog(`Destination: ${destination}`);
-            addLog(`Config: ${config.codec} @ ${config.bitrate}kbps`);
-            
-            document.getElementById('call-status').textContent = 'Connexion...';
-            document.getElementById('call-status').className = 'text-sm px-2 py-1 rounded bg-yellow-300';
-            
-            // Appel API réel vers Tieline
-            try {
-                const result = await makeCallToTieline(config);
-                
-                if (result.success) {
-                    callActive = true;
-                    callStartTime = Date.now();
-                    document.getElementById('call-button').disabled = true;
-                    document.getElementById('hangup-button').disabled = false;
-                    document.getElementById('call-status').textContent = 'En ligne';
-                    document.getElementById('call-status').className = 'text-sm px-2 py-1 rounded bg-green-300';
-                    document.getElementById('call-quality').textContent = 'Excellente';
-                    
-                    addLog('✅ Appel établi avec succès');
-                    
-                    // Démarrer le timer
-                    callTimer = setInterval(updateCallDuration, 1000);
-                    
-                    // Simuler le buffer (en attendant les vraies données API)
-                    simulateBuffer();
-                } else {
-                    throw new Error(result.error || 'Échec de l\'appel');
-                }
-            } catch (error) {
-                addLog(`❌ Erreur: ${error.message}`);
-                document.getElementById('call-status').textContent = 'Échec';
-                document.getElementById('call-status').className = 'text-sm px-2 py-1 rounded bg-red-300';
-                alert(`Erreur lors de l'appel:\n${error.message}`);
-            }
+            hideStep(4);
+            showStep(5);
+            addLog(`Destination: ${dest}`);
         }
         
-        // Appel API vers Tieline (à adapter selon votre API réelle)
-        async function makeCallToTieline(config) {
-            const machine = config.machine;
-            const baseUrl = `http://${machine.ip}:${machine.port}`;
+        // Sélectionner profil
+        function selectProfile(profileId) {
+            state.profile = profileId;
             
-            // Pour Merlin (API REST)
-            if (machine.api === 'rest') {
-                try {
-                    const response = await fetch(`${baseUrl}/api/v1/connection/dial`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': 'Basic ' + btoa('admin:votre_password')
-                        },
-                        body: JSON.stringify({
-                            line: config.line,
-                            destination: config.destination,
-                            codec: config.codec,
-                            bitrate: parseInt(config.bitrate),
-                            mode: config.mode,
-                            smartstream: config.smartstream
-                        })
-                    });
-                    
-                    if (response.ok) {
-                        const data = await response.json();
-                        return { success: true, data };
-                    } else {
-                        return { success: false, error: `HTTP ${response.status}` };
-                    }
-                } catch (e) {
-                    // Mode simulation si l'API n'est pas accessible
-                    console.warn('API non accessible, mode simulation');
-                    return new Promise(resolve => {
-                        setTimeout(() => resolve({ success: true, simulated: true }), 2000);
-                    });
-                }
+            document.querySelectorAll('[data-profile]').forEach(el => el.classList.remove('selected'));
+            document.querySelector(`[data-profile="${profileId}"]`).classList.add('selected');
+            
+            const profile = profiles[profileId];
+            document.getElementById('codec').value = profile.codec;
+            document.getElementById('bitrate').value = profile.bitrate;
+            document.getElementById('audio-mode').value = profile.mode;
+            document.getElementById('smartstream').checked = profile.smartstream;
+            
+            addLog(`Profil sélectionné: ${profile.label}`);
+        }
+        
+        // Confirmer profil
+        function confirmProfile() {
+            if (!state.profile) {
+                state.profile = 'custom';
             }
             
-            // Pour Bridge-IT (CGI)
-            else if (machine.api === 'cgi') {
-                // Adapter selon l'API CGI de Bridge-IT
-                return new Promise(resolve => {
-                    setTimeout(() => resolve({ success: true, simulated: true }), 2000);
-                });
-            }
+            const profileLabel = state.profile !== 'custom' ? 
+                profiles[state.profile].label : 
+                `${document.getElementById('codec').value} ${document.getElementById('bitrate').value}k`;
+            
+            updateSummary('profile', `⚙️ ${profileLabel}`);
+            
+            hideStep(5);
+            showStep(6);
+            addLog(`Configuration audio confirmée: ${profileLabel}`);
+        }
+        
+        // Initier l'appel
+        async function initiateCall() {
+            addLog('═══════════════════════════');
+            addLog('🚀 ÉTABLISSEMENT DE L\'APPEL');
+            addLog('═══════════════════════════');
+            addLog(`Codec: ${machines[state.machine].name}`);
+            addLog(`Ligne: ${state.line}`);
+            addLog(`Vers: ${state.destination}`);
+            addLog(`Type: ${state.connectionType}`);
+            addLog('Connexion en cours...');
+            
+            document.getElementById('call-status').textContent = 'Connexion...';
+            document.getElementById('call-status').className = 'px-3 py-1 rounded-full text-xs font-bold bg-yellow-500';
+            
+            // Simulation de l'appel (remplacer par vraie API)
+            setTimeout(() => {
+                state.callActive = true;
+                state.callStartTime = Date.now();
+                
+                document.getElementById('call-button').disabled = true;
+                document.getElementById('call-button').classList.add('opacity-50', 'cursor-not-allowed');
+                document.getElementById('hangup-button').disabled = false;
+                document.getElementById('hangup-button').classList.remove('opacity-50', 'cursor-not-allowed');
+                
+                document.getElementById('call-status').textContent = 'En ligne ✅';
+                document.getElementById('call-status').className = 'px-3 py-1 rounded-full text-xs font-bold bg-green-500';
+                document.getElementById('call-quality').textContent = 'Excellente';
+                document.getElementById('quality-bar').style.width = '95%';
+                
+                addLog('✅ APPEL ÉTABLI AVEC SUCCÈS');
+                addLog('Codec audio actif');
+                addLog('Transmission en cours...');
+                
+                state.callTimer = setInterval(updateCallDuration, 1000);
+                simulateBuffer();
+            }, 2000);
         }
         
         // Raccrocher
-        async function hangupCall() {
-            if (!callActive) return;
+        function hangupCall() {
+            if (!state.callActive) return;
             
-            addLog('📴 Fin de l\'appel...');
+            addLog('📴 FIN DE L\'APPEL');
             
-            // Appel API réel vers Tieline pour raccrocher
-            try {
-                await hangupCallToTieline();
-                addLog('✅ Appel terminé');
-            } catch (error) {
-                addLog(`⚠️ Erreur lors du raccrochage: ${error.message}`);
-            }
-            
-            callActive = false;
-            clearInterval(callTimer);
+            state.callActive = false;
+            clearInterval(state.callTimer);
             
             document.getElementById('call-button').disabled = false;
+            document.getElementById('call-button').classList.remove('opacity-50', 'cursor-not-allowed');
             document.getElementById('hangup-button').disabled = true;
+            document.getElementById('hangup-button').classList.add('opacity-50', 'cursor-not-allowed');
+            
             document.getElementById('call-status').textContent = 'Terminé';
-            document.getElementById('call-status').className = 'text-sm px-2 py-1 rounded bg-gray-300';
+            document.getElementById('call-status').className = 'px-3 py-1 rounded-full text-xs font-bold bg-gray-700';
             document.getElementById('call-duration').textContent = '00:00';
             document.getElementById('call-quality').textContent = '-';
+            document.getElementById('quality-bar').style.width = '0%';
             document.getElementById('buffer-level').textContent = '0%';
             document.getElementById('buffer-bar').style.width = '0%';
-        }
-        
-        // Raccrocher via API Tieline
-        async function hangupCallToTieline() {
-            const machine = machines[selectedMachine];
-            const baseUrl = `http://${machine.ip}:${machine.port}`;
             
-            if (machine.api === 'rest') {
-                try {
-                    await fetch(`${baseUrl}/api/v1/connection/hangup`, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': 'Basic ' + btoa('admin:votre_password')
-                        },
-                        body: JSON.stringify({ line: selectedLine })
-                    });
-                } catch (e) {
-                    console.warn('API non accessible, mode simulation');
-                }
-            }
+            addLog('✅ Appel terminé correctement');
         }
         
-        // Mettre à jour la durée de l'appel
+        // Mettre à jour durée
         function updateCallDuration() {
-            if (!callActive) return;
+            if (!state.callActive) return;
             
-            const elapsed = Math.floor((Date.now() - callStartTime) / 1000);
+            const elapsed = Math.floor((Date.now() - state.callStartTime) / 1000);
             const minutes = Math.floor(elapsed / 60);
             const seconds = elapsed % 60;
             document.getElementById('call-duration').textContent = 
                 `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
         }
         
-        // Simuler le buffer (remplacer par vraies données API)
+        // Simuler buffer
         function simulateBuffer() {
             let bufferLevel = 0;
             const bufferInterval = setInterval(() => {
-                if (!callActive) {
+                if (!state.callActive) {
                     clearInterval(bufferInterval);
                     return;
                 }
@@ -708,99 +711,87 @@
             }, 500);
         }
         
-        // Réinitialiser tout
+        // Mettre à jour le récapitulatif
+        function updateSummary(key, value) {
+            document.getElementById('summary').classList.remove('hidden');
+            const el = document.getElementById(`sum-${key}`);
+            el.textContent = value;
+            el.classList.remove('hidden');
+        }
+        
+        // Afficher étape
+        function showStep(step) {
+            state.currentStep = step;
+            document.getElementById(`step-${step}`).classList.remove('hidden');
+            document.getElementById(`progress-${step}`).classList.add('active');
+            if (step > 1) {
+                document.getElementById(`progress-${step - 1}`).classList.remove('active');
+                document.getElementById(`progress-${step - 1}`).classList.add('completed');
+            }
+        }
+        
+        // Cacher étape
+        function hideStep(step) {
+            const stepEl = document.getElementById(`step-${step}`);
+            stepEl.classList.add('fade-out');
+            setTimeout(() => {
+                stepEl.classList.add('hidden');
+                stepEl.classList.remove('fade-out');
+            }, 300);
+        }
+        
+        // Réinitialiser
         function resetAll() {
-            if (callActive) {
-                if (!confirm('Un appel est en cours. Voulez-vous vraiment réinitialiser ?')) {
+            if (state.callActive) {
+                if (!confirm('Un appel est en cours. Voulez-vous vraiment recommencer ?')) {
                     return;
                 }
                 hangupCall();
             }
             
-            selectedMachine = null;
-            selectedLine = null;
+            // Réinitialiser l'état
+            state = {
+                currentStep: 1,
+                machine: null,
+                line: null,
+                connectionType: null,
+                destination: null,
+                profile: null,
+                callActive: false,
+                callTimer: null,
+                callStartTime: null
+            };
             
-            document.querySelectorAll('[data-machine], .line-btn').forEach(el => el.classList.remove('selected'));
-            document.getElementById('machine-selected').textContent = 'Aucun';
-            document.getElementById('line-selected').textContent = 'Aucune';
+            // Réinitialiser l'UI
+            document.querySelectorAll('[data-machine], .line-btn, [data-type], [data-profile]').forEach(el => el.classList.remove('selected'));
+            document.getElementById('summary').classList.add('hidden');
+            document.querySelectorAll('.summary-badge').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.progress-step').forEach((el, i) => {
+                el.classList.remove('active', 'completed');
+            });
             
-            document.getElementById('line-section').classList.add('hidden');
-            document.getElementById('profile-section').classList.add('hidden');
-            document.getElementById('dial-section').classList.add('hidden');
-            document.getElementById('action-section').classList.add('hidden');
+            // Cacher toutes les étapes sauf la première
+            for (let i = 2; i <= 6; i++) {
+                document.getElementById(`step-${i}`).classList.add('hidden');
+            }
+            document.getElementById(`step-1`).classList.remove('hidden');
             
             document.getElementById('ip-address').value = '';
             document.getElementById('isdn-number').value = '';
             document.getElementById('phonebook').value = '';
-            document.getElementById('profile-select').value = '';
             
-            addLog('🔄 Réinitialisation complète');
+            document.getElementById('progress-1').classList.add('active');
+            
+            document.getElementById('activity-log').innerHTML = '<p class="text-gray-500">[Système réinitialisé]</p>';
         }
         
-        // Sauvegarder la configuration
-        function saveCurrentConfig() {
-            const config = {
-                machine: selectedMachine,
-                line: selectedLine,
-                connectionType: connectionType,
-                profile: document.getElementById('profile-select').value,
-                codec: document.getElementById('codec').value,
-                bitrate: document.getElementById('bitrate').value,
-                mode: document.getElementById('audio-mode').value,
-                smartstream: document.getElementById('smartstream').checked
-            };
-            
-            localStorage.setItem('tieline-call-config', JSON.stringify(config));
-            addLog('💾 Configuration sauvegardée');
-            alert('✅ Configuration sauvegardée avec succès !');
-        }
-        
-        // Charger la configuration sauvegardée
-        function loadSavedConfig() {
-            const saved = localStorage.getItem('tieline-call-config');
-            if (!saved) {
-                alert('⚠️ Aucune configuration sauvegardée');
-                return;
-            }
-            
-            const config = JSON.parse(saved);
-            
-            if (config.machine) {
-                selectMachine(config.machine);
-                if (config.line) {
-                    setTimeout(() => selectLine(config.line), 100);
-                }
-            }
-            
-            document.getElementById('profile-select').value = config.profile || '';
-            document.getElementById('codec').value = config.codec || 'musicam';
-            document.getElementById('bitrate').value = config.bitrate || '128';
-            document.getElementById('audio-mode').value = config.mode || 'stereo';
-            document.getElementById('smartstream').checked = config.smartstream !== false;
-            
-            setConnectionType(config.connectionType || 'ip');
-            
-            addLog('📂 Configuration chargée');
-            alert('✅ Configuration chargée avec succès !');
-        }
-        
-        // Gérer les profils
-        function manageProfiles() {
-            alert('Fonctionnalité à venir:\n\n- Créer de nouveaux profils\n- Modifier les profils existants\n- Supprimer des profils\n- Importer/Exporter des profils');
-        }
-        
-        // Gérer le phonebook
-        function managePhonebook() {
-            alert('Fonctionnalité à venir:\n\n- Ajouter des contacts\n- Modifier les contacts existants\n- Supprimer des contacts\n- Organiser par catégories\n- Importer/Exporter le carnet d\'adresses');
-        }
-        
-        // Ajouter une entrée au log
+        // Ajouter log
         function addLog(message) {
             const log = document.getElementById('activity-log');
             const time = new Date().toLocaleTimeString();
             const entry = document.createElement('p');
             entry.textContent = `[${time}] ${message}`;
-            entry.className = 'text-gray-700 mb-1';
+            entry.className = 'mb-1';
             
             if (log.firstChild && log.firstChild.classList.contains('text-gray-500')) {
                 log.innerHTML = '';
@@ -808,31 +799,6 @@
             
             log.appendChild(entry);
             log.scrollTop = log.scrollHeight;
-        }
-        
-        // Charger le statut des lignes depuis l'API Tieline (exemple)
-        async function loadLineStatus(machineId) {
-            const machine = machines[machineId];
-            const baseUrl = `http://${machine.ip}:${machine.port}`;
-            
-            try {
-                const response = await fetch(`${baseUrl}/api/v1/connection/status`, {
-                    headers: {
-                        'Authorization': 'Basic ' + btoa('admin:votre_password')
-                    }
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    // Mettre à jour le statut de chaque ligne
-                    // data.lines.forEach(line => {
-                    //     document.getElementById(`merlin-line-${line.id}-status`).textContent = 
-                    //         line.connected ? 'En ligne' : 'Disponible';
-                    // });
-                }
-            } catch (e) {
-                console.warn('Impossible de charger le statut des lignes');
-            }
         }
     </script>
 </body>

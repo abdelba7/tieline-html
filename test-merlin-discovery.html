@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merlin Discovery API Tool</title>
+</head>
+<body>
+    <h1>Tieline Merlin Codec API Discovery Tool</h1>
+    <p>This tool tests multiple endpoints of the Tieline Merlin codec located at <strong>82.127.52.49:25013</strong>.</p>
+    <script>
+        const endpoints = [
+            '/api/status',
+            '/api/settings',
+            '/api/update',
+            '/api/restart'
+        ];
+
+        endpoints.forEach(endpoint => {
+            fetch(`http://82.127.52.49:25013${endpoint}`)
+                .then(response => response.json())
+                .then(data => console.log(`Response from ${endpoint}:`, data))
+                .catch(error => console.error(`Error fetching ${endpoint}:`, error));
+        });
+    </script>
+</body>
+</html>

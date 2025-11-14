@@ -1,1 +1,79 @@
-<!DOCTYPE html>\n<html lang="en">\n<head>\n    <meta charset="UTF-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n    <title>API Discovery Tool</title>\n    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">\n</head>\n<body class="bg-gray-100">\n    <div class="container mx-auto p-6">\n        <h1 class="text-2xl font-bold mb-4">API Discovery Tool</h1>\n        <div class="bg-white p-4 rounded shadow">\n            <div class="mb-4">\n                <label class="block text-gray-700">IP Address:</label>\n                <input type="text" id="ipAddress" class="mt-1 p-2 border rounded w-full" placeholder="Enter IP Address">\n            </div>\n            <div class="mb-4">\n                <label class="block text-gray-700">Port:</label>\n                <input type="text" id="port" class="mt-1 p-2 border rounded w-full" placeholder="Enter Port">\n            </div>\n            <div class="mb-4">\n                <label class="block text-gray-700">Username:</label>\n                <input type="text" id="username" class="mt-1 p-2 border rounded w-full" placeholder="Enter Username">\n            </div>\n            <div class="mb-4">\n                <label class="block text-gray-700">Password:</label>\n                <input type="password" id="password" class="mt-1 p-2 border rounded w-full" placeholder="Enter Password">\n            </div>\n            <button class="bg-blue-500 text-white py-2 px-4 rounded" onclick="testApiEndpoints()">Test API Endpoints</button>\n            <button class="bg-green-500 text-white py-2 px-4 rounded ml-2" onclick="testCgiScripts()">Test CGI Scripts</button>\n        </div>\n        <div id="results" class="mt-4"></div>\n    </div>\n    <script>\n        function testApiEndpoints() {\n            const ip = document.getElementById('ipAddress').value;\n            const port = document.getElementById('port').value;\n            const username = document.getElementById('username').value;\n            const password = document.getElementById('password').value;\n            const endpoints = ['/api/v1/status', '/api/v1/connection', '/api/v1/gpio'];\n            let resultsDiv = document.getElementById('results');\n            resultsDiv.innerHTML = '';\n            endpoints.forEach(endpoint => {\n                fetch(`http://${ip}:${port}${endpoint}`, {\n                    method: 'GET',\n                    headers: {\n                        'Authorization': 'Basic ' + btoa(username + ':' + password)\n                    }\n                })\n                .then(response => response.json().then(data => ({data, status: response.status})))\n                .then(({data, status}) => {\n                    const resultColor = status === 200 ? 'bg-green-200' : 'bg-red-200';\n                    resultsDiv.innerHTML += `<div class='${resultColor} p-2 rounded mb-2'>${endpoint}: ${status} - ${JSON.stringify(data)} (Duration: X ms)</div>`;\n                })\n                .catch(error => {\n                    resultsDiv.innerHTML += `<div class='bg-red-200 p-2 rounded mb-2'>${endpoint}: Error - ${error.message}</div>`;\n                });\n            });\n        }\n        function testCgiScripts() {\n            const ip = document.getElementById('ipAddress').value;\n            const port = document.getElementById('port').value;\n            const scripts = ['/cgi-bin/status.cgi', '/cgi-bin/gpio_status.cgi'];\n            let resultsDiv = document.getElementById('results');\n            scripts.forEach(script => {\n                fetch(`http://${ip}:${port}${script}`)\n                .then(response => response.json().then(data => ({data, status: response.status})))\n                .then(({data, status}) => {\n                    const resultColor = status === 200 ? 'bg-green-200' : 'bg-red-200';\n                    resultsDiv.innerHTML += `<div class='${resultColor} p-2 rounded mb-2'>${script}: ${status} - ${JSON.stringify(data)} (Duration: X ms)</div>`;\n                })\n                .catch(error => {\n                    resultsDiv.innerHTML += `<div class='bg-red-200 p-2 rounded mb-2'>${script}: Error - ${error.message}</div>`;\n                });\n            });\n        }\n    <\/script>\n</body>\n</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Discovery Tool</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto p-6">
+        <h1 class="text-2xl font-bold mb-4">API Discovery Tool</h1>
+        <div class="bg-white p-4 rounded shadow">
+            <div class="mb-4">
+                <label class="block text-gray-700">IP Address:</label>
+                <input type="text" id="ipAddress" class="mt-1 p-2 border rounded w-full" placeholder="Enter IP Address">
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700">Port:</label>
+                <input type="text" id="port" class="mt-1 p-2 border rounded w-full" placeholder="Enter Port">
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700">Username:</label>
+                <input type="text" id="username" class="mt-1 p-2 border rounded w-full" placeholder="Enter Username">
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700">Password:</label>
+                <input type="password" id="password" class="mt-1 p-2 border rounded w-full" placeholder="Enter Password">
+            </div>
+            <button class="bg-blue-500 text-white py-2 px-4 rounded" onclick="testApiEndpoints()">Test API Endpoints</button>
+            <button class="bg-green-500 text-white py-2 px-4 rounded ml-2" onclick="testCgiScripts()">Test CGI Scripts</button>
+        </div>
+        <div id="results" class="mt-4"></div>
+    </div>
+    <script>
+        function testApiEndpoints() {
+            const ip = document.getElementById('ipAddress').value;
+            const port = document.getElementById('port').value;
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const endpoints = ['/api/v1/status', '/api/v1/connection', '/api/v1/gpio'];
+            let resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+            endpoints.forEach(endpoint => {
+                fetch(`http://${ip}:${port}${endpoint}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Basic ' + btoa(username + ':' + password)
+                    }
+                })
+                .then(response => response.json().then(data => ({data, status: response.status})))
+                .then(({data, status}) => {
+                    const resultColor = status === 200 ? 'bg-green-200' : 'bg-red-200';
+                    resultsDiv.innerHTML += `<div class='${resultColor} p-2 rounded mb-2'>${endpoint}: ${status} - ${JSON.stringify(data)} (Duration: X ms)</div>`;
+                })
+                .catch(error => {
+                    resultsDiv.innerHTML += `<div class='bg-red-200 p-2 rounded mb-2'>${endpoint}: Error - ${error.message}</div>`;
+                });
+            });
+        }
+        function testCgiScripts() {
+            const ip = document.getElementById('ipAddress').value;
+            const port = document.getElementById('port').value;
+            const scripts = ['/cgi-bin/status.cgi', '/cgi-bin/gpio_status.cgi'];
+            let resultsDiv = document.getElementById('results');
+            scripts.forEach(script => {
+                fetch(`http://${ip}:${port}${script}`)
+                .then(response => response.json().then(data => ({data, status: response.status})))
+                .then(({data, status}) => {
+                    const resultColor = status === 200 ? 'bg-green-200' : 'bg-red-200';
+                    resultsDiv.innerHTML += `<div class='${resultColor} p-2 rounded mb-2'>${script}: ${status} - ${JSON.stringify(data)} (Duration: X ms)</div>`;
+                })
+                .catch(error => {
+                    resultsDiv.innerHTML += `<div class='bg-red-200 p-2 rounded mb-2'>${script}: Error - ${error.message}</div>`;
+                });
+            });
+        }
+    </script>
+</body>
+</html>

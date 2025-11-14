@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tieline Diagnostic Tool</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gradient-to-r from-purple-400 via-pink-500 to-red-500">
+    <div class="container mx-auto p-4">
+        <h1 class="text-white text-3xl font-bold">Tieline Diagnostic Tool</h1>
+        <section class="mt-4 p-4 bg-white rounded shadow">
+            <h2 class="text-xl font-semibold">Configuration</h2>
+            <form id="config-form">
+                <label for="ip" class="block">IP:</label>
+                <input type="text" id="ip" value="82.127.52.49" class="border rounded mb-2 p-2">
+                <label for="port" class="block">Port:</label>
+                <input type="number" id="port" value="25013" class="border rounded mb-2 p-2">
+                <label for="username" class="block">Username:</label>
+                <input type="text" id="username" value="admin" class="border rounded mb-2 p-2">
+                <label for="password" class="block">Password:</label>
+                <input type="password" id="password" class="border rounded mb-4 p-2">
+                <button type="submit" class="bg-blue-500 text-white p-2 rounded">Start Test</button>
+            </form>
+        </section>
+        <section id="results" class="mt-4 p-4 bg-white rounded shadow">
+            <h2 class="text-xl font-semibold">Results</h2>
+            <div id="output"></div>
+        </section>
+    </div>
+    <script>
+        document.getElementById('config-form').onsubmit = async function(event) {
+            event.preventDefault();
+            // Add your testing logic here
+            // 1. Connectivity test
+            // 2. Authentication tests
+            // 3. Endpoint testing
+            // 4. Response analysis
+            // 5. CORS detection
+            // 6. Color-coded results
+            // 7. Export to JSON
+            // 8. Recommendations
+            console.log('Testing initiated...');
+            // Implement the tests here.
+        };
+    </script>
+</body>
+</html>

@@ -3,25 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Merlin Discovery API Tool</title>
+    <title>API Discovery Tool</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body>
-    <h1>Tieline Merlin Codec API Discovery Tool</h1>
-    <p>This tool tests multiple endpoints of the Tieline Merlin codec located at <strong>82.127.52.49:25013</strong>.</p>
+<body class="bg-gray-100 text-gray-800">
+    <div class="container mx-auto mt-10">
+        <h1 class="text-2xl font-bold mb-5">API Discovery Tool</h1>
+        <div class="mb-5">
+            <input type="text" id="ip" placeholder="IP Address" class="border p-2 mr-2">
+            <input type="number" id="port" placeholder="Port" class="border p-2 mr-2">
+            <input type="text" id="username" placeholder="Username" class="border p-2 mr-2">
+            <input type="password" id="password" placeholder="Password" class="border p-2 mr-2">
+            <button id="connect" class="bg-blue-500 text-white p-2">Connect</button>
+        </div>
+        <div id="test-sections">
+            <h2 class="text-xl font-semibold mt-5">REST API Endpoints</h2>
+            <div class="mb-5">
+                <button onclick="testEndpoint('/api/v1/status')" class="bg-green-500 text-white p-2 mr-2">/api/v1/status</button>
+                <button onclick="testEndpoint('/api/v1/connection')" class="bg-green-500 text-white p-2 mr-2">/api/v1/connection</button>
+                <button onclick="testEndpoint('/api/v1/gpio')" class="bg-green-500 text-white p-2 mr-2">/api/v1/gpio</button>
+                <button onclick="testEndpoint('/api/v1/audio')" class="bg-green-500 text-white p-2 mr-2">/api/v1/audio</button>
+                <button onclick="testEndpoint('/api/v1/lines')" class="bg-green-500 text-white p-2">/api/v1/lines</button>
+            </div>
+            <h2 class="text-xl font-semibold mt-5">CGI Script Testing</h2>
+            <div class="mb-5">
+                <button onclick="testEndpoint('/cgi-bin/status.cgi')" class="bg-green-500 text-white p-2 mr-2">/cgi-bin/status.cgi</button>
+                <button onclick="testEndpoint('/cgi-bin/gpio_status.cgi')" class="bg-green-500 text-white p-2 mr-2">/cgi-bin/gpio_status.cgi</button>
+                <button onclick="testEndpoint('/cgi-bin/connection_info.cgi')" class="bg-green-500 text-white p-2">/cgi-bin/connection_info.cgi</button>
+            </div>
+            <h2 class="text-xl font-semibold mt-5">WebSocket Connection Testing</h2>
+            <button onclick="testWebSocket()" class="bg-blue-500 text-white p-2">Test WebSocket Connection</button>
+        </div>
+        <div id="results" class="mt-5"></div>
+        <button onclick="exportResults()" class="bg-gray-500 text-white p-2 mt-5">Export Results as JSON</button>
+        <button onclick="clearResults()" class="bg-red-500 text-white p-2 mt-5">Clear Results</button>
+    </div>
     <script>
-        const endpoints = [
-            '/api/status',
-            '/api/settings',
-            '/api/update',
-            '/api/restart'
-        ];
+        // JavaScript functions to handle API tests and results
 
-        endpoints.forEach(endpoint => {
-            fetch(`http://82.127.52.49:25013${endpoint}`)
-                .then(response => response.json())
-                .then(data => console.log(`Response from ${endpoint}:`, data))
-                .catch(error => console.error(`Error fetching ${endpoint}:`, error));
-        });
-    </script>
-</body>
-</html>
+        let results = [];
+
+        function testEndpoint(endpoint) {
+            // Add test logic here
+            results.push({ endpoint, result: 'success' });
+            displayResults();
+        }
+
+        function testWebSocket() {
+            // WebSocket test logic
+            results.push({ endpoint: 'WebSocket', result: 'success' });
+            displayResults();
+        }
+
+        function displayResults() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = results.map(r => `<p>${r.endpoint}: <span class=\

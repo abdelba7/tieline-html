@@ -1,1 +1,214 @@
-<!DOCTYPE html>\n<html lang="en">\n<head>\n    <meta charset="UTF-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n    <title>API Discovery Tool</title>\n    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">\n</head>\n<body class="bg-gray-100">\n    <div class="container mx-auto p-6">\n        <h1 class="text-2xl font-bold mb-4">API Discovery Tool</h1>\n        <div class="bg-white p-4 rounded shadow">\n            <div class="mb-4">\n                <label class="block text-gray-700">IP Address:</label>\n                <input type="text" id="ipAddress" class="mt-1 p-2 border rounded w-full" placeholder="Enter IP Address">\n            </div>\n            <div class="mb-4">\n                <label class="block text-gray-700">Port:</label>\n                <input type="text" id="port" class="mt-1 p-2 border rounded w-full" placeholder="Enter Port">\n            </div>\n            <div class="mb-4">\n                <label class="block text-gray-700">Username:</label>\n                <input type="text" id="username" class="mt-1 p-2 border rounded w-full" placeholder="Enter Username">\n            </div>\n            <div class="mb-4">\n                <label class="block text-gray-700">Password:</label>\n                <input type="password" id="password" class="mt-1 p-2 border rounded w-full" placeholder="Enter Password">\n            </div>\n            <button class="bg-blue-500 text-white py-2 px-4 rounded" onclick="testApiEndpoints()">Test API Endpoints</button>\n            <button class="bg-green-500 text-white py-2 px-4 rounded ml-2" onclick="testCgiScripts()">Test CGI Scripts</button>\n        </div>\n        <div id="results" class="mt-4"></div>\n    </div>\n    <script>\n        function testApiEndpoints() {\n            const ip = document.getElementById('ipAddress').value;\n            const port = document.getElementById('port').value;\n            const username = document.getElementById('username').value;\n            const password = document.getElementById('password').value;\n            const endpoints = ['/api/v1/status', '/api/v1/connection', '/api/v1/gpio'];\n            let resultsDiv = document.getElementById('results');\n            resultsDiv.innerHTML = '';\n            endpoints.forEach(endpoint => {\n                fetch(`http://${ip}:${port}${endpoint}`, {\n                    method: 'GET',\n                    headers: {\n                        'Authorization': 'Basic ' + btoa(username + ':' + password)\n                    }\n                })\n                .then(response => response.json().then(data => ({data, status: response.status})))\n                .then(({data, status}) => {\n                    const resultColor = status === 200 ? 'bg-green-200' : 'bg-red-200';\n                    resultsDiv.innerHTML += `<div class='${resultColor} p-2 rounded mb-2'>${endpoint}: ${status} - ${JSON.stringify(data)} (Duration: X ms)</div>`;\n                })\n                .catch(error => {\n                    resultsDiv.innerHTML += `<div class='bg-red-200 p-2 rounded mb-2'>${endpoint}: Error - ${error.message}</div>`;\n                });\n            });\n        }\n        function testCgiScripts() {\n            const ip = document.getElementById('ipAddress').value;\n            const port = document.getElementById('port').value;\n            const scripts = ['/cgi-bin/status.cgi', '/cgi-bin/gpio_status.cgi'];\n            let resultsDiv = document.getElementById('results');\n            scripts.forEach(script => {\n                fetch(`http://${ip}:${port}${script}`)\n                .then(response => response.json().then(data => ({data, status: response.status})))\n                .then(({data, status}) => {\n                    const resultColor = status === 200 ? 'bg-green-200' : 'bg-red-200';\n                    resultsDiv.innerHTML += `<div class='${resultColor} p-2 rounded mb-2'>${script}: ${status} - ${JSON.stringify(data)} (Duration: X ms)</div>`;\n                })\n                .catch(error => {\n                    resultsDiv.innerHTML += `<div class='bg-red-200 p-2 rounded mb-2'>${script}: Error - ${error.message}</div>`;\n                });\n            });\n        }\n    <\/script>\n</body>\n</html>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tieline Merlin - API Discovery</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .result-success { background-color: #d1fae5; border-left: 4px solid #10b981; }
+        .result-error { background-color: #fee2e2; border-left: 4px solid #ef4444; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-900 to-purple-700 min-h-screen p-8">
+    <div class="max-w-6xl mx-auto">
+        <div class="bg-white rounded-lg shadow-2xl p-8 mb-6">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">🔍 Tieline Merlin API Discovery</h1>
+            <p class="text-gray-600">Outil de test pour découvrir les endpoints disponibles</p>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-xl p-6 mb-6">
+            <h2 class="text-2xl font-bold mb-4">⚙️ Configuration</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-bold mb-2">IP Address</label>
+                    <input type="text" id="ip" value="82.127.52.49" class="w-full border-2 rounded px-3 py-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-2">Port</label>
+                    <input type="number" id="port" value="25013" class="w-full border-2 rounded px-3 py-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-2">Username</label>
+                    <input type="text" id="username" value="admin" class="w-full border-2 rounded px-3 py-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-2">Password</label>
+                    <input type="password" id="password" class="w-full border-2 rounded px-3 py-2">
+                </div>
+            </div>
+            <div class="mt-6 flex gap-4">
+                <button onclick="testAllEndpoints()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg">
+                    🚀 Tester tous les endpoints
+                </button>
+                <button onclick="clearResults()" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg">
+                    🗑️ Effacer
+                </button>
+                <button onclick="exportResults()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg">
+                    📥 Exporter JSON
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div class="bg-white rounded-lg shadow-xl p-6">
+                <h2 class="text-xl font-bold mb-4">🌐 API REST</h2>
+                <div class="space-y-2">
+                    <button onclick="testEndpoint('/api/v1/status')" class="w-full bg-blue-100 hover:bg-blue-200 text-left px-4 py-3 rounded font-semibold">
+                        GET /api/v1/status
+                    </button>
+                    <button onclick="testEndpoint('/api/v1/connection')" class="w-full bg-blue-100 hover:bg-blue-200 text-left px-4 py-3 rounded font-semibold">
+                        GET /api/v1/connection
+                    </button>
+                    <button onclick="testEndpoint('/api/v1/gpio')" class="w-full bg-blue-100 hover:bg-blue-200 text-left px-4 py-3 rounded font-semibold">
+                        GET /api/v1/gpio
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-xl p-6">
+                <h2 class="text-xl font-bold mb-4">📜 CGI Scripts</h2>
+                <div class="space-y-2">
+                    <button onclick="testEndpoint('/cgi-bin/status.cgi')" class="w-full bg-purple-100 hover:bg-purple-200 text-left px-4 py-3 rounded font-semibold">
+                        GET /cgi-bin/status.cgi
+                    </button>
+                    <button onclick="testEndpoint('/cgi-bin/gpio_status.cgi')" class="w-full bg-purple-100 hover:bg-purple-200 text-left px-4 py-3 rounded font-semibold">
+                        GET /cgi-bin/gpio_status.cgi
+                    </button>
+                    <button onclick="testEndpoint('/cgi-bin/connection_info.cgi')" class="w-full bg-purple-100 hover:bg-purple-200 text-left px-4 py-3 rounded font-semibold">
+                        GET /cgi-bin/connection_info.cgi
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-xl p-6">
+            <h2 class="text-xl font-bold mb-4">📊 Résultats</h2>
+            <div id="results" class="space-y-3">
+                <p class="text-gray-500 italic">Aucun test effectué. Cliquez sur un endpoint pour commencer.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const results = [];
+
+        function getConfig() {
+            return {
+                ip: document.getElementById('ip').value,
+                port: document.getElementById('port').value,
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value
+            };
+        }
+
+        async function testEndpoint(endpoint) {
+            const config = getConfig();
+            const url = `http://${config.ip}:${config.port}${endpoint}`;
+            const startTime = Date.now();
+            
+            addResult({ endpoint, status: 'pending', message: 'Test en cours...' });
+
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Basic ' + btoa(`${config.username}:${config.password}`)
+                    }
+                });
+
+                const duration = Date.now() - startTime;
+                const contentType = response.headers.get('content-type');
+                
+                let data;
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    data = await response.text();
+                }
+
+                updateLastResult({
+                    status: response.ok ? 'success' : 'error',
+                    httpStatus: response.status,
+                    duration: duration,
+                    contentType: contentType,
+                    data: data
+                });
+            } catch (error) {
+                const duration = Date.now() - startTime;
+                updateLastResult({
+                    status: 'error',
+                    duration: duration,
+                    error: error.message,
+                    details: 'Erreur réseau ou CORS. Testez depuis le réseau local.'
+                });
+            }
+        }
+
+        function addResult(result) {
+            results.push(result);
+            renderResults();
+        }
+
+        function updateLastResult(updates) {
+            Object.assign(results[results.length - 1], updates);
+            renderResults();
+        }
+
+        function renderResults() {
+            const container = document.getElementById('results');
+            if (results.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 italic">Aucun test effectué.</p>';
+                return;
+            }
+
+            container.innerHTML = results.map(r => {
+                const className = r.status === 'success' ? 'result-success' : 'result-error';
+                let html = `<div class="${className} p-4 rounded-lg">`;
+                html += `<strong>GET ${r.endpoint}</strong><br>`;
+                if (r.httpStatus) html += `Status: ${r.httpStatus}<br>`;
+                if (r.duration) html += `Durée: ${r.duration}ms<br>`;
+                if (r.contentType) html += `Type: ${r.contentType}<br>`;
+                if (r.error) html += `<br>❌ ${r.error}<br>`;
+                if (r.details) html += `${r.details}<br>`;
+                if (r.data) html += `<br><pre class="text-xs overflow-x-auto">${JSON.stringify(r.data, null, 2)}</pre>`;
+                html += `</div>`;
+                return html;
+            }).reverse().join('');
+        }
+
+        function clearResults() {
+            if (confirm('Effacer tous les résultats ?')) {
+                results.length = 0;
+                renderResults();
+            }
+        }
+
+        function exportResults() {
+            const blob = new Blob([JSON.stringify(results, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `tieline-discovery-${Date.now()}.json`;
+            a.click();
+        }
+
+        async function testAllEndpoints() {
+            clearResults();
+            const endpoints = [
+                '/api/v1/status',
+                '/api/v1/connection',
+                '/api/v1/gpio',
+                '/cgi-bin/status.cgi',
+                '/cgi-bin/gpio_status.cgi',
+                '/cgi-bin/connection_info.cgi'
+            ];
+            
+            for (const endpoint of endpoints) {
+                await testEndpoint(endpoint);
+                await new Promise(r => setTimeout(r, 500));
+            }
+        }
+    </script>
+</body>
+</html>
